@@ -29,6 +29,7 @@
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto"/>
               <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             
             <TextBlock Margin="8,4" Grid.Row="0" Grid.ColumnSpan="2">
@@ -43,9 +44,21 @@
                 <Button Content="Start" Command="{Binding ElementName=Root, Path=DataContext.StartFollowCommand}" CommandParameter="{Binding}"/>
                 <Button Content="Stop" Command="{Binding ElementName=Root, Path=DataContext.StopFollowCommand}" CommandParameter="{Binding}"/>
               </StackPanel>
+              
+              <TextBlock Text="Pickup:"/>
+              <StackPanel Orientation="Horizontal">
+                <CheckBox IsChecked="{Binding Config.PickupDump}"/>
+                <Button Content="Dump" Command="{Binding ElementName=Root, Path=DataContext.TogglePickupDumpCommand}" CommandParameter="{Binding}"/>
+                <CheckBox IsChecked="{Binding Config.IsPickupMaster}"/>
+                <Button Content="IsMaster" Command="{Binding ElementName=Root, Path=DataContext.ToggleIsPickupMasterCommand}" CommandParameter="{Binding}"/>
+              </StackPanel>
+            </StackPanel>
+            
+            <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,10,0">
+              
             </StackPanel>
 
-            <StackPanel Grid.Row="1" Grid.Column="1"
+            <StackPanel Grid.Row="1" Grid.Column="2"
                         Visibility="{Binding Role, Converter={StaticResource FlagsEnumVisibilityConverter}, ConverterParameter={x:Static model:UserRoles.Iss}}">
               <!--ISS BUFF-->
               <CheckBox x:Name="BuffConfigShown" Content="Buff config"/>

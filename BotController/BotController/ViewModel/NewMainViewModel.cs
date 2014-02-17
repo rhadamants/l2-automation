@@ -71,6 +71,10 @@ namespace BotController.ViewModel
 
       StartFollowAllCommand = new RelayCommand(NavigationManager.StartFollow);
       StopFollowAllCommand = new RelayCommand(NavigationManager.StopFollow);
+
+      // pickup
+      TogglePickupDumpCommand = new RelayCommand<User>(PickupManager.ToggleDumpAndUpdate);
+      ToggleIsPickupMasterCommand = new RelayCommand<User>(PickupManager.ToggleMasterAndUpdate);
     }
 
     #region Resurrection
@@ -140,6 +144,13 @@ namespace BotController.ViewModel
       get { return _followPosition; }
       set { Set("FollowPosition", ref _followPosition, value); }
     }
+
+    #endregion
+
+    #region Pickup
+    
+    public RelayCommand<User> TogglePickupDumpCommand { get; set; }
+    public RelayCommand<User> ToggleIsPickupMasterCommand { get; set; }
 
     #endregion
 

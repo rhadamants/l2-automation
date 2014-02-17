@@ -65,15 +65,26 @@ function EventsBus:addCallback(eventName, callback, immortal)
 	if not (self.events[eventName] and "function" == type(callback)) then
 		return eprint("addCallback() invalid input event:"..type(self.events[eventName]).. " callback:"..type(callback)) end
 	
-	table.insert(self.events[eventName], 
-		{ -- var WaiterHandle
+	local waiterHandle = {
 			waiter = callback,
 			continueCondition=continueCondition,
 			immortal = immortal,
-		});
+		};
+	table.insert(self.events[eventName], waiterHandle);
+	
+	return waiterHandle;
 end
 
-function EventsBus:removeCallback(eventName, callback)
+function EventsBus:removeCallback(eventName, waiterHandle)
+	local waitersList = self.events[eventName];
+	if not waitersList then
+		return; end
+		
+	for i=#waitersList, 1, -1 do
+		if waitersList[i] == waiterHandle then
+			table.remove(waitersList, i);
+		end
+	end
 end
 
 --- this function will pause CurrentThread until specific event happen or timeout
