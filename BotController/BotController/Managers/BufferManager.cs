@@ -21,7 +21,8 @@ namespace BotController.Managers
         return;
       }
 
-      ServerManager.SendMessageToClient(user, CreateWatchBuffConfigMessage(user));
+      UpdateUserCfg(user);
+
       ServerManager.SendMessageToClient(user, "issBuffStart");
     }
 
@@ -45,6 +46,14 @@ namespace BotController.Managers
       }
 
       ServerManager.SendMessageToClient(user, "issBuffStop");
+    }
+
+    public static void UpdateUserCfg(User user)
+    {
+      if (user == null || !user.Role.HasFlag(UserRoles.Iss))
+        return;
+
+      ServerManager.SendMessageToClient(user, CreateWatchBuffConfigMessage(user));
     }
 
     private static string CreateWatchBuffConfigMessage(User user)

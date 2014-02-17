@@ -79,5 +79,16 @@ namespace BotController.Model
     }
     
     #endregion
+
+    #region assist
+    
+    private string _assistMaster;
+    public string AssistMaster
+    {
+      get { return _assistMaster; }
+      set { Set("AssistMaster", ref _assistMaster, value); }
+    }
+
+    #endregion
   }
 }

@@ -31,36 +31,44 @@
               <ColumnDefinition Width="Auto"/>
               <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            
-            <TextBlock Margin="8,4" Grid.Row="0" Grid.ColumnSpan="2">
-              <Run Text="{Binding Name}"/>
-              (<Run Text="{Binding Role}"/>)
-            </TextBlock>
-          
-            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,10,0">
-              <StackPanel Orientation="Horizontal">
+
+            <StackPanel Orientation="Horizontal" Margin="8,4"  Grid.Row="0" Grid.ColumnSpan="3">
+              <TextBlock><Run Text="{Binding Name}"/> (<Run Text="{Binding Role}"/>)</TextBlock>
+              <CheckBox IsChecked="{Binding Config.IsHuman, Mode=TwoWay}" Content="Is human"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,0">
+              <StackPanel Orientation="Horizontal" Margin="0,4">
                 <TextBlock Text="Follow:"/>
                 <ComboBox ItemsSource="{Binding ElementName=Root, Path=DataContext.Users}" Text="{Binding Config.UserToFollow}" SelectedItem="{Binding Config.UserToFollow, Mode=TwoWay}"/>
                 <Button Content="Start" Command="{Binding ElementName=Root, Path=DataContext.StartFollowCommand}" CommandParameter="{Binding}"/>
                 <Button Content="Stop" Command="{Binding ElementName=Root, Path=DataContext.StopFollowCommand}" CommandParameter="{Binding}"/>
               </StackPanel>
               
-              <TextBlock Text="Pickup:"/>
-              <StackPanel Orientation="Horizontal">
+              
+              <StackPanel Orientation="Horizontal" Margin="0,4">
+                <TextBlock Text="Pickup:"/>
                 <CheckBox IsChecked="{Binding Config.PickupDump}"/>
                 <Button Content="Dump" Command="{Binding ElementName=Root, Path=DataContext.TogglePickupDumpCommand}" CommandParameter="{Binding}"/>
                 <CheckBox IsChecked="{Binding Config.IsPickupMaster}"/>
                 <Button Content="IsMaster" Command="{Binding ElementName=Root, Path=DataContext.ToggleIsPickupMasterCommand}" CommandParameter="{Binding}"/>
               </StackPanel>
+
+              <StackPanel Orientation="Horizontal" Margin="0,4">
+                <TextBlock Text="Assist:"/>
+                <ComboBox ItemsSource="{Binding ElementName=Root, Path=DataContext.Users}" Text="{Binding Config.AssistMaster}" SelectedItem="{Binding Config.AssistMaster, Mode=TwoWay}"/>
+                <Button Content="Start" Command="{Binding ElementName=Root, Path=DataContext.StartAssistCommand}" CommandParameter="{Binding}"/>
+                <Button Content="Stop" Command="{Binding ElementName=Root, Path=DataContext.StopAssistCommand}" CommandParameter="{Binding}"/>
+              </StackPanel>
             </StackPanel>
             
-            <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,10,0">
+            <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,8,0">
               
             </StackPanel>
 
+            <!--ISS BUFF-->
             <StackPanel Grid.Row="1" Grid.Column="2"
                         Visibility="{Binding Role, Converter={StaticResource FlagsEnumVisibilityConverter}, ConverterParameter={x:Static model:UserRoles.Iss}}">
-              <!--ISS BUFF-->
               <CheckBox x:Name="BuffConfigShown" Content="Buff config"/>
               <Border BorderBrush="Black" BorderThickness="1" 
                       Visibility="{Binding ElementName=BuffConfigShown, Path=IsChecked, Converter={StaticResource ValueToVisibilityConverter}}">
@@ -131,9 +139,14 @@
         <ComboBox x:Name="PartyLeaderSelector" ItemsSource="{Binding Users}" Margin="0,8"/>
       </StackPanel>
 
-      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-        <Button Content="Start follow all" Margin="10,8,0,8" Command="{Binding StartFollowAllCommand}"/>
-        <Button Content="Stop follow all" Margin="0,8,10,8" Command="{Binding StopFollowAllCommand}"/>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,4">
+        <Button Content="Start follow all" Margin="10,0,0,0" Command="{Binding StartFollowAllCommand}"/>
+        <Button Content="Stop follow all" Margin="0,0,10,0" Command="{Binding StopFollowAllCommand}"/>
+      </StackPanel>
+
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4">
+        <Button Content="Start assist all" Margin="10,0,0,0" Command="{Binding StartAssistAllCommand}"/>
+        <Button Content="Stop assist all" Margin="0,0,10,0" Command="{Binding StopAssistAllCommand}"/>
       </StackPanel>
 
       <Button Content="Open log" VerticalAlignment="Bottom" Click="OpenLog_OnClick"/>

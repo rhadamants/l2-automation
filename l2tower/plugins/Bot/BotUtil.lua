@@ -83,7 +83,7 @@ end
 
 -- L2Tower Pause is used in this case in order to prevent mixing of several script actions
 function LockPause()
-	L2TowerPaused = IsPaused();
+	L2TowerPaused = IsPaused() or L2TowerPaused;
 	if not L2TowerPaused then
 		SetPause(true);
 	end

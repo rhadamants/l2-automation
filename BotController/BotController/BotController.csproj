@@ -71,11 +71,13 @@
     </ApplicationDefinition>
     <Compile Include="Core\GlobalKeyboardHook.cs" />
     <Compile Include="Core\ObservableDictionary.cs" />
+    <Compile Include="Managers\AssistManager.cs" />
     <Compile Include="Managers\BufferManager.cs" />
     <Compile Include="Managers\ChatManager.cs" />
     <Compile Include="Managers\Extensions.cs" />
     <Compile Include="Managers\IssBuffManager.cs" />
     <Compile Include="Managers\Log.cs" />
+    <Compile Include="Managers\PickupManager.cs" />
     <Compile Include="Managers\TacticManager.cs" />
     <Compile Include="Model\SkillCD.cs" />
     <Compile Include="Managers\UserResurrectionManager.cs" />
