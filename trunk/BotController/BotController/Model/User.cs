@@ -47,8 +47,7 @@ namespace BotController.Model
       {
         Id = dto["i"] != null ? (int) dto["i"] : 0,
         Name = dto["n"] != null ? (string)dto["n"] : "No name ?",
-        Class = dto["c"] != null ? (int)dto["c"] : 0,
-        Config = new UserConfig()
+        Class = dto["c"] != null ? (int)dto["c"] : 0
       };
     }
 

@@ -59,18 +59,24 @@ namespace BotController.ViewModel
 
       BufferInit();
 
+      // resurrect
       ResUserCommand = new RelayCommand<User>(UserResurrectionManager.RessurectUser);
       UserResurrectionManager.OnDeadUsersListChanged += OnDeadUsersListChanged;
       OnDeadUsersListChanged(null, null);
       
       CreatePartyCommand = new RelayCommand<User>(UserManager.CreateParty);
-//      RefreshUsersCommand = new RelayCommand(UserManager.RefreshUsersInfo);
 
+      // follow
       StartFollowCommand = new RelayCommand<User>(NavigationManager.StartFollow);
       StopFollowCommand = new RelayCommand<User>(NavigationManager.StopFollow);
-
       StartFollowAllCommand = new RelayCommand(NavigationManager.StartFollow);
       StopFollowAllCommand = new RelayCommand(NavigationManager.StopFollow);
+
+      // assist
+      StartAssistCommand = new RelayCommand<User>(AssistManager.StartAssist);
+      StopAssistCommand = new RelayCommand<User>(AssistManager.StopAssist);
+      StartAssistAllCommand = new RelayCommand(AssistManager.StartAssist);
+      StopAssistAllCommand = new RelayCommand(AssistManager.StopAssist);
 
       // pickup
       TogglePickupDumpCommand = new RelayCommand<User>(PickupManager.ToggleDumpAndUpdate);
@@ -152,6 +158,14 @@ namespace BotController.ViewModel
     public RelayCommand<User> TogglePickupDumpCommand { get; set; }
     public RelayCommand<User> ToggleIsPickupMasterCommand { get; set; }
 
+    #endregion
+
+    #region assist
+    public RelayCommand<User> StartAssistCommand { get; set; }
+    public RelayCommand<User> StopAssistCommand { get; set; }
+
+    public RelayCommand StartAssistAllCommand { get; set; }
+    public RelayCommand StopAssistAllCommand { get; set; }
     #endregion
 
     #region MainWindow

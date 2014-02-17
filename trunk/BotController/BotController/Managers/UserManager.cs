@@ -40,6 +40,8 @@ namespace BotController.Managers
 //      {2, new User{HandleId = 2, Name = "Test2", Role = UserRoles.RDD, Config = new UserConfig()}}
     };
 
+    public static readonly Dictionary<string, UserConfig> UserConfigs = new Dictionary<string, UserConfig>();
+
     public static User CurrentUser
     {
       get
@@ -58,6 +60,13 @@ namespace BotController.Managers
     public static IEnumerable<User> GetAllUsersWithRole(UserRoles role)
     {
       return Users.Values.Where(u => u.Role.HasFlag(role));
+    }
+
+    public static UserConfig GetUserConfig(string userName)
+    {
+      if (!UserConfigs.ContainsKey(userName))
+        UserConfigs.Add(userName, new UserConfig());
+      return UserConfigs[userName];
     }
 
     #endregion
@@ -114,11 +123,14 @@ namespace BotController.Managers
         Users.Remove(userHandleId);
       }
 
+      user.Config = GetUserConfig(user.Name);
       Users.Add(userHandleId, user);
 
       var userListChanged = UserListChanged;
       if (userListChanged != null)
         userListChanged(new UserEventArgs(user));
+
+      UpdateUserConfigs(user);
     }
 
     public static void UserSignOut(int userHandleId)
@@ -221,6 +233,12 @@ namespace BotController.Managers
     }
 
     #endregion
+
+    public static void UpdateUserConfigs(User user)
+    {
+      //BufferManager.UpdateUserCfg(user);
+      //PickupManager.UpdateConfig(user);
+    }
 
     public static UserRoles GetRoleByClass(int userClass)
     {
