@@ -61,5 +61,23 @@ namespace BotController.Model
     }
 
     #endregion
+
+    #region pickup
+    
+    private bool _pickupDump;
+    public bool PickupDump
+    {
+      get { return _pickupDump; }
+      set { Set("PickupDump", ref _pickupDump, value); }
+    }
+
+    private bool _isPickupMaster;
+    public bool IsPickupMaster
+    {
+      get { return _isPickupMaster; }
+      set { Set("IsPickupMaster", ref _isPickupMaster, value); }
+    }
+    
+    #endregion
   }
 }
