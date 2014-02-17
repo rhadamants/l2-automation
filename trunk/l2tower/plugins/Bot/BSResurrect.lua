@@ -82,7 +82,6 @@ function BSResurrect:cmdResurrect(jsonCfg)
 end
 
 function BSResurrect:resurrectUser(userId, canDelegate)
-	
 	local user = GetUserById(userId)
 	local resSkill = GetSkills():FindById(self.resSkillId)
 	
@@ -92,6 +91,8 @@ function BSResurrect:resurrectUser(userId, canDelegate)
 		
 	elseif resSkill and resSkill:CanBeUsed() then
 		local resSkillReuse = resSkill:GetReuse();
+
+		dprint("Going to ressurrect ".. user:GetName().." in " .. tostring(resSkillReuse))
 		if resSkillReuse > 0 then
 			ThreadSleepMs(resSkillReuse + 100)
 		end
@@ -102,7 +103,7 @@ function BSResurrect:resurrectUser(userId, canDelegate)
 
 		LockPause()
 		SelectTargetByOId(userId)
-		CastSkill(self.resSkillId);
+		CastSkill(self.resSkillId, 3);
 		SelectTargetByOId(0)
 		UnlockPause()
 

@@ -18,10 +18,10 @@ end
 function OnCommand_wg(vCommandChatType, vNick, vCommandParam)
   local self = BSTeleport;
   if self.thread then
-    log("Stop watchgo");
+    dprint("Stop watchgo");
     return self:reset();
   end
-  log("start watchgo");
+  dprint("start watchgo");
   self.lastHtml = GetDialogHtml();
   self.thread = CreateThread(self, self.watchDialogProc);
 end

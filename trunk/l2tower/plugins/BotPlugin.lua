@@ -1,5 +1,3 @@
--- This is master plugin for a set of different functionality.
--- please see svn description for more ditails about it.
 
 --if true then return; end
 
@@ -28,7 +26,6 @@ function InitLua()
 	eprint = function(...) print("ERROR ", ...) end
 end
 
--- there were support for command line execution of the script, but I guess it died.
 if arg and arg[1] == "lua" then
 	InitLua()
 else
