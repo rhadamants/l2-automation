@@ -3,7 +3,7 @@ CharSkills = {
 	[139] = { -- Sigel Knight
 		jumpSkill = 10015,
 		massAttackSkills = {10013, 10014},
-		singleAttackSkills = {10011, 10009, 10008, 10010},
+		singleAttackSkills = {10008, 10011},--10011, 10009, 10008, 10010},
 	};
 	[141] = { -- Othell Rogue
 		singleAttackSkills = {

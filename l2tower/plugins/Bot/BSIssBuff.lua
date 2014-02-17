@@ -17,11 +17,12 @@ function BSIssBuff:cmdStart()
 	if self.thread then
 		return eprint("BSIssBuff: is already working")
 	end
-
+	dprint("IssBuff started")
 	self.thread = CreateThread(self, self.threadProc)
 end
 
 function BSIssBuff:cmdStop()
+	dprint("IssBuff stopped")
 	StopThread(self.thread)
 	self.thread = nil;
 	for _,buffCfg in pairs(BuffsConfig) do
@@ -31,6 +32,7 @@ function BSIssBuff:cmdStop()
 end
 
 function BSIssBuff:cmdPause()
+	dprint("IssBuff paused")
 	StopThread(self.thread)
 	self.thread = nil;
 	UnlockPause();

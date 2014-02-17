@@ -17,23 +17,31 @@ BSFollow = {
   links = {}, -- links found in last dialog
 
   setups = {
+    -- left side
     {
-      keyPointShiftRangeMin = -40;
-      keyPointShiftRangeMax = -42;
+      keyPointShiftRangeMin = -35;
+      keyPointShiftRangeMax = -40;
       minFollowDist = 100;
       maxFollowDist = 200;
     },
     {
-      keyPointShiftRangeMin = 40;
-      keyPointShiftRangeMax = 42;
+      keyPointShiftRangeMin = -45;
+      keyPointShiftRangeMax = -50;
+      minFollowDist = 150;
+      maxFollowDist = 220;
+    },
+    -- right side
+    {
+      keyPointShiftRangeMin = 35;
+      keyPointShiftRangeMax = 40;
       minFollowDist = 150;
       maxFollowDist = 220;
     },
     {
-      keyPointShiftRangeMin = 100;
-      keyPointShiftRangeMax = 101;
-      minFollowDist = 400;
-      maxFollowDist = 500;
+      keyPointShiftRangeMin = 45;
+      keyPointShiftRangeMax = 50;
+      minFollowDist = 100;
+      maxFollowDist = 200;
     },
   }
 }
@@ -61,6 +69,9 @@ function BSFollow:reset()
 end
 
 function BSFollow:cmdStopFollow(jsonCfg)
+  if self.thread then
+    dprint("stop follow")
+  end
   self:reset();
 end
 
@@ -73,16 +84,32 @@ function BSFollow:cmdFollow(jsonCfg)
   local setup = self.setups[setupId]
 
   if not setup then
-    return eprint("Incorrect setup"); 
+    return eprint("Follow incorrect setup"); 
   end
 
   for key,val in pairs(setup) do
     self[key] = val;
   end
 
-  --local cfg = json.decode(jsonCfg);
-  self.targetId = GetTarget():GetId();--cfg.target or 0;
+  self.targetId = nil;
+  local targetName = cfg.target 
+  local players = GetPlayerList(); 
+  for player in players.list do 
+    if (player:GetName() == targetName)  then 
+      self.targetId = player:GetId();
+    end
+  end
 
+  if not self.targetId then
+    eprint("Not able to find target to follow " .. tostring(targetName))
+  else
+    dprint("Following " .. targetName .. " setup:"..setupId)
+  end
+
+  --local cfg = json.decode(jsonCfg);
+  -- self.targetId = GetTarget():GetId();--cfg.target or 0;
+
+  self.followDist = math.random(self.minFollowDist, self.maxFollowDist);
   self.thread = CreateThread(self, self.threadProc)
   self.threadFollow = CreateThread(self, self.followProc)
 end
@@ -236,11 +263,11 @@ function BSFollow:goToPathPoint(currentPoint)
   local pointReachedTreshhold = self.useMinimalTreshhold and 15 or self.pointReachedTreshhold
   if distToPoint < pointReachedTreshhold then
     -- point reached
+    self.isMoving = true;
     self.useMinimalTreshhold = false;
     self.lastPassedPoint = self.slavePath:popLast()
     local nextPathPoint = self:getCurrentPathPoint();
     if not nextPathPoint then -- end of path
-      self.followDist = 0
       self.isMoving = false;
       return;
     end
@@ -250,6 +277,7 @@ function BSFollow:goToPathPoint(currentPoint)
     -- point is too far to be part of path
     self.slavePath:popLast()
   elseif not self.isMoving then
+    self.isMoving = true;
     local l = currentPoint.shiftedLoc
     MoveToNoWait(l.X, l.Y, l.Z)
   end
@@ -266,9 +294,8 @@ function BSFollow:updateMasterPath()
     local newDir = target:GetRotation().Yaw;
     local isAngleBreak = math.abs(math.abs(newDir) - math.abs(lastPathPoint.dir)) > 30 
     if 
-      passedDist > self.pathDetailsMaxTrashhold -- max treshhold
-      or ( math.abs(math.abs(newDir) - math.abs(lastPathPoint.dir)) > 30 
-         and passedDist > self.pathDetailsMinTrashhold)
+      not isMoving and GetDistanceVector(newLoc, GetMe():GetLocation()) > self.maxFollowDist
+      or (passedDist > self.pathDetailsMaxTrashhold or ( isAngleBreak and passedDist>self.pathDetailsMinTrashhold))
     then
       self.masterPath:addFirst({
         --listNext
@@ -287,16 +314,6 @@ function BSFollow:updateSlavePath()
   local newSlaveHead = nil;
   local distToSlave = 0;
 
-  -- pause on start of new path
-  if not curSlaveHead then
-    local delay = math.random(5,10) * 100;
-    ThreadSleepMs(delay);
-  end
-
-  if self.followDist == 0 then
-    self.followDist = math.random(self.minFollowDist, self.maxFollowDist);
-  end
-
   -- locate new slave path head
   for pathPoint in self.masterPath:iterate() do
     if pathPoint == curSlaveHead then
@@ -305,7 +322,7 @@ function BSFollow:updateSlavePath()
     if pathPoint.type == "dialog" then
       newSlaveHead = pathPoint
       break;
-    elseif distToSlave + pathPoint.pathDist > self.minFollowDist then
+    elseif distToSlave + pathPoint.pathDist > self.followDist then
       newSlaveHead = pathPoint.listPrev
       break
     else
@@ -315,6 +332,13 @@ function BSFollow:updateSlavePath()
 
   -- copy master path to slave
   if newSlaveHead and curSlaveHead ~= newSlaveHead then
+    if not curSlaveHead then
+      self.followDist = math.random(self.minFollowDist, self.maxFollowDist);
+      -- pause on start of new path
+      -- local delay = math.random(1,5);
+      -- ThreadSleepS(delay);
+    end
+
     for pathPoint in self.masterPath:iterateRev() do
       log("new Slave point")
       self.slavePath:addFirst(self.masterPath:popLast())
