@@ -1,0 +1,84 @@
+﻿<Window x:Class="BotController.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:vm="clr-namespace:BotController.ViewModel"
+        Title="MainWindow" Height="350" Width="525"
+        DataContext="{DynamicResource MainViewModel}">
+  <Window.Resources>
+    <vm:MainViewModel x:Key="MainViewModel"/>
+    <DataTemplate x:Key="DataTemplate1">
+      <ListBoxItem>
+        <TextBlock Text="{Binding Name}"/>
+      </ListBoxItem>
+    </DataTemplate>
+  </Window.Resources>
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="150"/>
+      <ColumnDefinition Width="*"/>
+    </Grid.ColumnDefinitions>
+    <ListBox ItemsSource="{Binding Users}" ItemTemplate="{StaticResource DataTemplate1}"/>
+    <StackPanel Grid.Column="1">
+
+      <!--ISS BUFF-->
+      <Border BorderBrush="Black" BorderThickness="1">
+        <Grid HorizontalAlignment="Center">
+          <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+          </Grid.RowDefinitions>
+          <CheckBox x:Name="IssBuffSettingsShown" Content="ISS BUFF config"
+                              Grid.Row="0"/>
+          <StackPanel Grid.Row="1" Orientation="Horizontal" Visibility="{Binding ElementName=IssBuffSettingsShown, Path=IsChecked, Converter={StaticResource ValueToVisibilityConverter}}">
+            <TextBlock Text="OopMode: "/>
+            <CheckBox IsChecked="{Binding IsOopMode}"/>
+            <TextBlock Text="InviteMode: "/>
+            <CheckBox IsChecked="{Binding IsInviteMode}"/>
+            <TextBlock Text="InviteName: "/>
+            <TextBox Text="{Binding InviteName}" Width="70"/>
+            <TextBlock Text="RequestMode: "/>
+            <CheckBox IsChecked="{Binding IsRequestParty}"/>
+            <TextBlock Text="RequestName: "/>
+            <TextBox Text="{Binding RequestPartyName}" Width="70"/>
+          </StackPanel>
+          <StackPanel Grid.Row="2" Orientation="Horizontal">
+            <Button Content="Start" Command="{Binding StartWatchBuffCommand}" Margin="10"/>
+            <Button Content="Stop" Command="{Binding StopWatchBuffCommand}" Margin="10"/>
+            <Button Content="Pause" Command="{Binding PauseWatchBuffCommand}" Margin="10"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!--RESURRECT-->
+      <Border BorderBrush="Black" BorderThickness="1" Visibility="{Binding HasDeadUsers, Converter={StaticResource ValueToVisibilityConverter}}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+          </Grid.ColumnDefinitions>
+          <ListBox x:Name="DeadUsersList" ItemsSource="{Binding DeadUsers}" ItemTemplate="{StaticResource DataTemplate1}"
+                             Height="50" TargetUpdated="DeadUsersList_OnTargetUpdated"/>
+          <Button Grid.Column="1" Content="Resurrect" Command="{Binding ResUserCommand}" CommandParameter="{Binding ElementName=DeadUsersList, Path=SelectedItem}"/>
+        </Grid>
+      </Border>
+
+      <!--CHAT-->
+      <CheckBox x:Name="ChatBanListShown" Content="Chat ban"
+                              Grid.Row="0"/>
+      <Border BorderBrush="Black" BorderThickness="1" Visibility="{Binding ElementName=ChatBanListShown, Path=IsChecked, Converter={StaticResource ValueToVisibilityConverter}}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+          </Grid.ColumnDefinitions>
+          <ListBox x:Name="ChatMsgersList" ItemsSource="{Binding Messangers}"
+                             Height="100" />
+          <Button Grid.Column="1" Content="Block user" Command="{Binding BlockChatUserCommand}" CommandParameter="{Binding ElementName=ChatMsgersList, Path=SelectedItem}"/>
+        </Grid>
+      </Border>
+
+
+    </StackPanel>
+
+  </Grid>
+</Window>
