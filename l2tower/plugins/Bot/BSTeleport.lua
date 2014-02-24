@@ -1,3 +1,5 @@
+-- watches your dialog actions in order to force bots who are following you to repeat them
+-- /wg  activate/deactivate 
 BSTeleport = {}
 
 function BSTeleport:reset()

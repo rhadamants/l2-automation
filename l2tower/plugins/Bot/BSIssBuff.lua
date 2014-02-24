@@ -1,3 +1,11 @@
+-- Just another script to give Iss Buff.
+-- uses the same algorithm as in IssBuff script
+
+-- additional feature:
+-- - iss can be automatically invited by another bot just before buff
+-- For example: if you are hunting in party with two small level chars and you have iss.
+-- You want him to be invited by someone from low level party
+
 BSIssBuff = {
 	oopMode = false;
 	inviteMode = false;

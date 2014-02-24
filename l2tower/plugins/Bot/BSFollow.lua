@@ -1,3 +1,6 @@
+-- controlled by server config
+-- follows path of target. (if you set offset to 0, then bot will accurately repeat path of his master)
+-- also can repeat dialog action of the target. (target should have BSTeleport enabled)
 BSFollow = {
   masterPath = {};
   slavePath = {};

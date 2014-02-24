@@ -1,3 +1,6 @@
+-- in order to send something to server call:
+-- SendServerMessage((string) serverMethod, (table|string) data)
+
 BotNetworkDispatcher = {
 	messagesToSend = {},
 	connection = nil,
@@ -30,6 +33,7 @@ function SendServerMessage(serverMethod, data)
 end
 
 function BotNetworkDispatcher:networkDispatcherThreadProc()
+	-- TODO: find a way to reconnect
 	-- local lastAttempt = 0;
 	-- while EventsBus:waitOn("OnLTick1s") do
 	-- 	if os.time() - lastAttempt > 10 then

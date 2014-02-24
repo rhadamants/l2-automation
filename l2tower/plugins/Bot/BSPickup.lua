@@ -1,3 +1,7 @@
+-- under development
+-- main goal: there should be one single brain that says who should pickup what.
+-- particularly this brain should balance players mp picking up recharge herb
+
 BSPickup = {
 	dumpData = false;
 	logCallbacks = nil;
