@@ -1,3 +1,6 @@
+-- on server side you have big button "Ressurrect"
+-- that button will say to one of your healers (this script) to ressurrect the player mentioned in command
+-- the script itself watches who is dead in party and sends to server
 BSResurrect = {
 	ressurrectSkillsCfg = {
 		[144] = 11564, -- Воскрешение Ангела

@@ -1,3 +1,5 @@
+-- everybody who send you PM will appear in server app you you'll have a simple button "block"
+-- useful when you have a lot of spam bots on server
 BSSpamBlock = {}
 
 function BSSpamBlock:init()

@@ -1,3 +1,6 @@
+-- for two needs:
+-- - share one set of system callbacks among multiple logic modules
+-- - implements multi-thread dispatching in order to have async calls
 EventsBus = {
 	eventsToHook = {
 		"OnCreate",
@@ -15,6 +18,16 @@ EventsBus = {
 	events = {}
 }
 
+-- creates new thread that can use async call to EventsBus:waitOn(...)
+function CreateThread(owner, threadProc, disposeMethod)
+	local thread = {
+		coroutine = coroutine.create(function () if threadProc then  threadProc(owner) end end);
+		disposeMethod = function() if disposeMethod then disposeMethod(owner) end end;
+	}
+	RunThread(thread)
+	return thread;
+end
+
 --- resumes passed thread, print crash error, set global CurrentThread
 function RunThread(thread, ...)
 	local prevThread = CurrentThread; -- this manipulation should allow threads stack
@@ -25,15 +38,6 @@ function RunThread(thread, ...)
 	if not noError then
 		dprint(res); end
 	return res;
-end
-
-function CreateThread(owner, threadProc, disposeMethod)
-	local thread = {
-		coroutine = coroutine.create(function () if threadProc then  threadProc(owner) end end);
-		disposeMethod = function() if disposeMethod then disposeMethod(owner) end end;
-	}
-	RunThread(thread)
-	return thread;
 end
 
 --- Remove thread from dispatch queue. This may cause memory leaks, but we don't care :)

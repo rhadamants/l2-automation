@@ -1,5 +1,3 @@
--- this file in a universal storage of things that should be refactored (crap)
-
 
 function split(pString, pPattern)
    local Table = {}  -- NOTE: use {n = 0} in Lua-5.0

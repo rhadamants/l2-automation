@@ -1,3 +1,4 @@
+-- performs mapping of server messages onto calls to end client managers
 BotCommandFactory = {
 	commands = {}
 }
