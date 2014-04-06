@@ -79,17 +79,30 @@ function table.any(tbl, cmpFu)
 	return false;
 end
 
--- L2Tower Pause is used in this case in order to prevent mixing of several script actions
+L2TowerPausedLock = 0;
+
+-- L2Tower Pause is used in order to take full control over char (disable all scripts and L2Tower functionality)
 function LockPause()
-	L2TowerPaused = IsPaused() or L2TowerPaused;
-	if not L2TowerPaused then
-		SetPause(true);
+	L2TowerPausedLock = L2TowerPausedLock + 1
+
+	if L2TowerPausedLock == 1 then
+		L2TowerPaused = IsPaused();
+		if not L2TowerPaused then
+			SetPause(true);
+		end
 	end
 end
 
 function UnlockPause()
-	if not L2TowerPaused then
-		SetPause(false);
+	L2TowerPausedLock = L2TowerPausedLock - 1
+
+	if L2TowerPausedLock == 0 then
+		if not L2TowerPaused then
+			SetPause(false);
+		end
+	elseif L2TowerPausedLock < 0 then
+		this:Log("L2TowerPausedLock become negative");
+		L2TowerPausedLock = 0;
 	end
 end
 

@@ -36,8 +36,11 @@ namespace BotController.Managers
 
     public static readonly Dictionary<int, User> Users = new Dictionary<int, User>()
     {
-//      {1, new User{HandleId = 1, Name = "Test", Role = UserRoles.Iss, Config = new UserConfig()}},
-//      {2, new User{HandleId = 2, Name = "Test2", Role = UserRoles.RDD, Config = new UserConfig()}}
+//      {1, new User{HandleId = 1, Name = "TestIss", Role = UserRoles.Iss, Config = new UserConfig()}},
+//      {2, new User{HandleId = 2, Name = "Test2", Role = UserRoles.RDD, Config = new UserConfig()}},
+//      {3, new User{HandleId = 3, Name = "Test3", Role = UserRoles.RDD, Config = new UserConfig()}},
+//      {4, new User{HandleId = 4, Name = "Test4", Role = UserRoles.Tank, Config = new UserConfig()}},
+//      {5, new User{HandleId = 5, Name = "Test5", Role = UserRoles.Heal, Config = new UserConfig()}}
     };
 
     public static readonly Dictionary<string, UserConfig> UserConfigs = new Dictionary<string, UserConfig>();
@@ -145,7 +148,8 @@ namespace BotController.Managers
     public static void MethodSetUserInfo(int userHandleId, JObject data)
     {
       Users.Remove(userHandleId);
-      Users.Add(userHandleId, User.FromDto(userHandleId, data));
+      //Users.Add(userHandleId, User.FromDto(userHandleId, data));
+      AddUser(userHandleId, User.FromDto(userHandleId, data));
 
       var userListChanged = UserListChanged;
       if (userListChanged != null)
@@ -207,6 +211,14 @@ namespace BotController.Managers
       }
     }
 
+    public static void SetUsersPause(bool state)
+    {
+      foreach (var user in Users.Values)
+      {
+        ServerManager.SendMessageToClient(user, string.Format("setBotState {{\"pauseState\":{0}}}", state.ToJsonString()));
+      }
+    }
+
     public static async void CreateParty(User pl)
     {
       if (pl == null)
@@ -221,7 +233,7 @@ namespace BotController.Managers
         foreach (var member in members)
         {
           await Task.Delay(500);
-          ServerManager.SendMessageToClient(pl.HandleId, String.Format("inviteUser {{\"target\":\"{0}\"}}", member.Name));
+          ServerManager.SendMessageToClient(pl.HandleId, string.Format("inviteUser {{\"target\":\"{0}\"}}", member.Name));
           await Task.Delay(500);
           ServerManager.SendMessageToClient(member.HandleId, "acceptInvite");
         }

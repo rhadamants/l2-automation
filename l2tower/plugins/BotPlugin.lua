@@ -1,6 +1,7 @@
 -- Loader of a plugin environment.
 -- as far as we want to build a logic over multiple plugins we need to have all of them executed under one Lua environment.
 -- so here we initialize all the stuff
+--SERVER_ADDRESS = "127.0.0.1"
 
 --if true then return; end
 
@@ -14,6 +15,7 @@ function InitLA()
 	dofile(package.path .. "json.lua");
 	json = require("json")
 
+	iprint = function(...) ShowToClient("INFO", ({...})[1]); end
 	dprint = function(...) if IsDebugEnabled then ShowToClient("debug", ({...})[1]); end end
 	eprint = function(...) ShowToClient("ERROR", ({...})[1]); end
 end
