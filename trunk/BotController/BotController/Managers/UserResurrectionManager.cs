@@ -21,7 +21,7 @@ namespace BotController.Managers
 
     public static readonly List<User> DeadUsers = new List<User>()
     {
-      //new User { Name = "Test dead", Class = 144, Role = UserRoles.RDD}
+//      new User { Name = "Test dead", Class = 144, Role = UserRoles.RDD}
     };
 
     public static event EventHandler OnDeadUsersListChanged;

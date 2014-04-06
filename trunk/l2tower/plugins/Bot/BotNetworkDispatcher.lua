@@ -45,7 +45,7 @@ function BotNetworkDispatcher:networkDispatcherThreadProc()
 end
 
 function BotNetworkDispatcher:handleConnection()
-	local c = assert(socket.connect("192.168.0.105", 8888))
+	local c = assert(socket.connect("192.168.0.5", 8888))
 	self.connection = c;
 	c:settimeout(0)   -- do not block
 	while EventsBus:waitOn("OnLTick") do

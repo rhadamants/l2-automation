@@ -65,6 +65,8 @@ namespace BotController.ViewModel
       OnDeadUsersListChanged(null, null);
       
       CreatePartyCommand = new RelayCommand<User>(UserManager.CreateParty);
+      RefreshUsersCommand = new RelayCommand(UserManager.RefreshUsersInfo);
+      SetBotStateCommand = new RelayCommand<bool>(UserManager.SetUsersPause);
 
       // follow
       StartFollowCommand = new RelayCommand<User>(NavigationManager.StartFollow);
@@ -178,7 +180,8 @@ namespace BotController.ViewModel
     
     public RelayCommand<User> CreatePartyCommand { get; set; }
 
-//    public RelayCommand RefreshUsersCommand { get; set; } 
+    public RelayCommand RefreshUsersCommand { get; set; } 
+    public RelayCommand<bool> SetBotStateCommand { get; set; } 
 
     private void UpdateUsersList()
     {
