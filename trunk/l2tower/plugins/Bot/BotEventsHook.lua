@@ -14,6 +14,8 @@ EventsBus = {
 		"OnMyTargetSelected", -- (target)
 		"OnDie", -- (user, spoiled)
 		"OnChatUserMessage", -- (chatType, nick, msg)
+		"OnTargetSelected",
+		"OnTargetUnselected",
 	},
 	events = {}
 }
