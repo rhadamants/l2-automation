@@ -203,9 +203,17 @@ namespace BotController.ViewModel
   {
     public static void AddRange<T>(this ObservableCollection<T> collection, IEnumerable<T> items)
     {
-      foreach (var item in items)
+      // TODO: get read of this try catch. Probably some degree of thread safe
+      try
       {
-        collection.Add(item);
+        foreach (var item in items)
+        {
+          collection.Add(item);
+        }
+      }
+      catch (Exception e)
+      {
+        Console.WriteLine(e);
       }
     }
   }

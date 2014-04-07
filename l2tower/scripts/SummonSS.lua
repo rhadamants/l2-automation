@@ -2,7 +2,7 @@
 
 cryR = 17371;
 ss = 35670;
-ssLimit = 1000;
+ssLimit = 5000;
 bss = 35671;
 bssLimit = 0;
 summonSkill = 11316; -- Призыв Зарядов Души
@@ -25,7 +25,7 @@ repeat
 		end
 	end;
 
-	if ssCount < ssLimit then or bssCount < bssLimit then
+	if ssCount < ssLimit then-- or bssCount < bssLimit then
 		if cryRCount == 0 then
 			--dprint("shutdown")
 		else

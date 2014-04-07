@@ -5,7 +5,7 @@ BSAssist = {
 }
 
 function BSAssist:init()
-	--BotCommandFactory:registerCommand("assist", self, self.cmdAssist)
+	BotCommandFactory:registerCommand("assist", self, self.cmdAssist)
 	BotCommandFactory:registerCommand("startAssist", self, self.cmdStartAssist)
 	BotCommandFactory:registerCommand("stopAssist", self, self.cmdStopAssist)
 	this:RegisterCommand("assist", CommandChatType.CHAT_ALLY, CommandAccessLevel.ACCESS_ME);
@@ -24,18 +24,28 @@ function OnCommand_assist(vCommandChatType, vNick, vCommandParam)
 	
 end;
 
-function BSAssist:cmdAssist(jsonCfg)	
-	
+function BSAssist:cmdAssist(jsonCfg)
+	local cfg = json.decode(jsonCfg);
+	SelectTargetByOId(cfg.target);
 end
 
 
 function BSAssist:cmdStartAssist(jsonCfg)
 	local cfg = json.decode(jsonCfg);
-	local masterId = cfg.master;
+	self.master = cfg.master;
 	
-	--check for master from Follow script
-	--self.masterId = masterId;
-	--self.master = todo;
+	self.masterId = -1;
+	local players = GetPlayerList(); 
+	for player in players.list do 
+		if (player:GetName() == self.master)  then 
+			self.masterId = player:GetId();
+		end
+	end
+	if (self.masterId == -1) then
+		eprint("Assist: unable to find master");
+		return;
+	end
+
 	
 	if not self.enabled then
 		self:startAssist()
@@ -45,10 +55,12 @@ function BSAssist:cmdStartAssist(jsonCfg)
 end
 
 function BSAssist:startAssist()
+	iprint("Assist " .. self.master .. " started");
 	self.assistCallbacks = {}
 	self.assistCallbacks["OnTargetSelected"] = 
 		EventsBus:addCallback("OnTargetSelected", 
 			function(user, target)
+				dprint("OnTargetSelected")
 				if user:GetId() == self.masterId then
 					self:masterTargetChanged(user, target)
 				end
@@ -67,19 +79,21 @@ end
 function BSAssist:cmdStopAssist()
 	if not self.enabled then
 		return; end
+
+	iprint("Assist " .. self.master .. " stopped");
 		
 	self.enabled = false;
 	for eventName,handler in pairs(self.assistCallbacks) do
-		EventsBus:removeCallBack(eventName, handler);
+		EventsBus:removeCallback(eventName, handler);
 	end
 end
 
 function BSAssist:masterTargetChanged(master, target)
 	local targetId = target:GetId();
-	if targetId ~= GetMe():GetTarget():GetId() then
-		if not master:IsInCombat() then
+	if  targetId ~= GetMe():GetTarget() then
+		-- if not master:IsInCombat() then
 			SelectTargetByOId(targetId);
-		end
+		-- end
 	end
 end
 
