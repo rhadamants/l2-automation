@@ -114,4 +114,6 @@ function BSResurrect:resurrectUser(userId, canDelegate)
 		self.thread = nil;
 		return eprint("Resurrect: Not able to res user");
 	end
+
+	self.thread = nil;
 end
