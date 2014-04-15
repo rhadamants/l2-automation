@@ -1,4 +1,8 @@
 -- Simple replacement of feature L2Tower "Nuke Attack" for Bow
+if GetMe():GetClass() ~= 142 then
+	ShowToClient("ERROR","You are not Yul Archer, so this script is not for you");
+	return;
+end
 
 BuffDebug = false
 AttackNewTargetDelay = 100;--ms

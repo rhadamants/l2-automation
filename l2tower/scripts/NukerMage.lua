@@ -1,6 +1,12 @@
 -- Simple replacement of feature L2Tower "Nuke Attack" for Mage
 -- also uses "Mp recharge" skill by CD
 
+if GetMe():GetClass() ~= 143 then 
+	ShowToClient("ERROR","You are not Feoh Wizard, so this script is not for you");
+	return;
+end
+
+
 BuffDebug = false
 MassAttackSkills = {11040, 11034}
 SingleAttackSkills = {11011, 11023} --11017};
