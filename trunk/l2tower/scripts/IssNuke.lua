@@ -214,9 +214,29 @@ function MobsCount(range)
 	return i
 end
 
+PatsMasterBuff = {
+	[14958] = "Warrior", -- Saber Tooth Cougar
+	[14965] = "Wizard", -- Summon Soul Reaper
+}
+
+function DefineBuffBySummon(playerName)
+	local playerPat = nil;
+	local pets = GetPetList();
+	for Apet in pets.list do
+		if Apet:GetNickName() == playerName then
+			playerPat = Apet;
+			break;
+		end
+	end
+	if playerPat ~= nil then
+		return PatsMasterBuff[playerPat:GetNpcId()];
+	end
+end
+
 function ProcessPersonalBuffs()
 	local function buffPersonalByName(user)
-		local skillName = ClassesType[user:GetClass()]
+		local userClass = user:GetClass();
+		local skillName = userClass == 145 and DefineBuffBySummon(user:GetName()) or ClassesType[user:GetClass()];
 		if not skillName then return false; end
 		local skill = GetSkills():FindById(BaffPersonal[skillName])
 		-- wait for skill ready

@@ -106,7 +106,8 @@ local ClassesType = {
 	-- and use whatever stands here instead, so you can force
 	-- different buff or put it manually if dynamical doesn't work
 	-- { [145], nil},	-- Wynn Summoner
-	[145] = "Wizard",	-- Wynn Summoner
+	-- [145] = "Wizard",	-- Wynn Summoner
+	-- [145] = "Warrior",	-- Wynn Summoner
 	[0] = "Warrior",	-- Human Fighter
 	[1] = "Warrior",	-- Warrior
 	[2] = "Warrior",	-- Gladiator
@@ -175,6 +176,10 @@ local ClassesType = {
 	[139] = "Knight",	-- Sigel Knight
 }
 
+PatsMasterBuff = {
+	[14958] = "Warrior", -- Saber Tooth Cougar
+	[14965] = "Wizard", -- Summon Soul Reaper
+}
 
 BaffPersonal = {
 	Knight = 11523, -- Гармония Стража
@@ -220,10 +225,24 @@ BuffsConfig = {
 	},
 };
 
+function BSIssBuff:defineBuffBySummon(playerName)
+	local playerPat = nil;
+	local pets = GetPetList();
+	for Apet in pets.list do
+		if Apet:GetNickName() == playerName then
+			playerPat = Apet;
+			break;
+		end
+	end
+	if playerPat ~= nil then
+		return PatsMasterBuff[playerPat:GetNpcId()];
+	end
+end
 
 function BSIssBuff:processPersonalBuffs()
 	local function buffPersonalByName(user)
-		local skillName = ClassesType[user:GetClass()]
+		local userClass = user:GetClass();
+		local skillName = userClass == 145 and self:defineBuffBySummon(user:GetName()) or ClassesType[user:GetClass()];
 		if not skillName then return false; end
 		local skill = GetSkills():FindById(BaffPersonal[skillName])
 		-- wait for skill ready
