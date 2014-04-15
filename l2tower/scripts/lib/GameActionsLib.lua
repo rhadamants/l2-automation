@@ -44,7 +44,7 @@ end
 
 function CastSkill(id)
 	skill = GetSkills():FindById(id)
-	if skill and skill:CanBeUsed() and skill:GetReuse() == 0 then
+	if skill and skill:CanBeUsed() and skill:GetReuse() == 0 and skill:IsSkillAvailable() then
 		UseSkillRaw(id,false,false)
 		return true
 	end
@@ -78,6 +78,15 @@ function CastOneByOneList(list, counter)
 	end]]
 end
 
+function GetItemAmountById(id)
+	local invList = GetInventory();
+	for item in invList.list do
+		if (item.displayId == id) then
+			return item.ItemNum;
+		end
+	end
+	return 0;
+end
 
 function MobsAroundTarget(targer, range)
 	
