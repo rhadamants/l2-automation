@@ -61,7 +61,7 @@ namespace BotController.ViewModel
 
       // resurrect
       ResUserCommand = new RelayCommand<User>(UserResurrectionManager.RessurectUser);
-      UserResurrectionManager.OnDeadUsersListChanged += OnDeadUsersListChanged;
+      UserResurrectionManager.DeadUsersListChanged += OnDeadUsersListChanged;
       OnDeadUsersListChanged(null, null);
       
       CreatePartyCommand = new RelayCommand<User>(UserManager.CreateParty);
@@ -113,25 +113,26 @@ namespace BotController.ViewModel
       }
     }
 
+    private bool _autoResurrect;
+    public bool AutoRessurrect
+    {
+      get { return _autoResurrect; }
+      set
+      {
+        _autoResurrect = value;
+        RaisePropertyChanged("AutoRessurrect");
+        UserResurrectionManager.SetAutoRes(value);
+      }
+    }
+
     private void OnDeadUsersListChanged(object sender, EventArgs eventArgs)
     {
       Application.Current.Dispatcher.InvokeAsync(() =>
       {
-        var prios = UserResurrectionManager.ResurrectionPriorities;
-        var selectedPrio = 0;
-        User selected = null;
         DeadUsers.Clear();
-        foreach (var user in UserResurrectionManager.DeadUsers)
-        {
-          var userPrioKey = prios.ContainsKey(user.Class) ? user.Class : 0;
-          var userPrio = UserResurrectionManager.ResurrectionPriorities[userPrioKey];
-          if (userPrio > selectedPrio)
-            selected = user;
-          DeadUsers.Add(user);
-        }
+        DeadUsers.AddRange(UserResurrectionManager.DeadUsers);
 
-        //SelectedDeadUserIndex = DeadUsers.IndexOf(selected);
-        SelectedDeadUser = selected;
+        SelectedDeadUser = UserResurrectionManager.GetNextUserToRes();
 
         HasDeadUsers = DeadUsers.Count > 0;
       });

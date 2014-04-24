@@ -24,7 +24,7 @@ namespace BotController.Managers
 //      new User { Name = "Test dead", Class = 144, Role = UserRoles.RDD}
     };
 
-    public static event EventHandler OnDeadUsersListChanged;
+    public static event EventHandler DeadUsersListChanged;
 
     public static void UpdateDeadUsers(int userHandleId, JObject data)
     {
@@ -37,23 +37,73 @@ namespace BotController.Managers
       DeadUsers.Clear();
       DeadUsers.AddRange(deads);
 
-      var onDeadUsersListChanged = OnDeadUsersListChanged;
-      if (onDeadUsersListChanged != null)
-        onDeadUsersListChanged(null, null);
+      var deadUsersListChanged = DeadUsersListChanged;
+      if (deadUsersListChanged != null)
+        deadUsersListChanged(null, null);
+    }
+
+    public static User GetNextUserToRes()
+    {
+      if (DeadUsers.Count == 0)
+        return null;
+
+      var prios = ResurrectionPriorities;
+      var selectedPrio = 0;
+      User selected = null;
+      
+      foreach (var user in DeadUsers)
+      {
+        var userPrioKey = prios.ContainsKey(user.Class) ? user.Class : 0;
+        var userPrio = ResurrectionPriorities[userPrioKey];
+        if (userPrio > selectedPrio)
+        {
+          selectedPrio = userPrio;
+          selected = user;
+        }
+      }
+
+      return selected;
+    }
+
+    public static void SetAutoRes(bool state)
+    {
+      if (state)
+      {
+        DeadUsersListChanged += OnDeadUsersListChanged;
+      }
+      else
+      {
+        DeadUsersListChanged -= OnDeadUsersListChanged;
+      }
+    }
+
+    private static void OnDeadUsersListChanged(object sender, EventArgs eventArgs)
+    {
+      var userToRes = GetNextUserToRes();
+      if (userToRes != null)
+        RessurectUser(userToRes);
     }
 
     public static void ResurrectByIss(User target)
     {
+      if (target == null)
+        return;
+
       var resurrector = UserManager.GetUserWithRole(UserRoles.Iss);
       if (resurrector == null || DeadUsers.Contains(resurrector))
+      {
+        Log.Info("No iss resurectors found");
         return;
+      }
+
+      Log.Info("Send ressurrect to iss {0}", resurrector.Name);
+
       ServerManager.SendMessageToClient(resurrector,
         string.Format("ressurrect {{\"target\":{0},\"canDelegate\":false}}", target.Id));
     }
 
     public static void RessurectUser(User user)
     {
-
       if (user == null)
         return;
 
