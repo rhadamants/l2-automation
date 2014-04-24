@@ -8,6 +8,10 @@ function LinkedList:new(o)
 	return setmetatable(o or {}, LinkedList_mt);
 end
 
+function LinkedList:any()
+	return self.last or self.first;
+end
+
 function LinkedList:getLast()
 	return self.last;
 end

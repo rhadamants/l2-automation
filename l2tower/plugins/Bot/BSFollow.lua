@@ -60,6 +60,7 @@ end
 function BSFollow:reset()
   self.masterPath = LinkedList:new()
   self.slavePath = LinkedList:new()
+  self.passedPath = LinkedList:new()
   if self.thread then
     StopThread(self.thread)
     self.thread = nil;
@@ -185,7 +186,7 @@ function BSFollow:checkUserIsStuck()
     return;
   end
 
-  if self.lastPassedPoint and idleTime > 3000 then
+  if self.passedPath:getLast() and idleTime > 3000 then
     self.useMinimalTreshhold = true;
 
     -- fix current point
@@ -193,7 +194,7 @@ function BSFollow:checkUserIsStuck()
     currentPoint.shiftedLoc = currentPoint.loc;
     
     -- create go back point
-    local returnPoint = self.lastPassedPoint;
+    local returnPoint = self.passedPath:popLast();
     returnPoint.shiftedLoc = returnPoint.loc;
     self.slavePath:addLast(returnPoint)
 
@@ -205,7 +206,26 @@ end
 
 function BSFollow:follow()
   if not self:isOnMove() then
-    return; end
+    -- and self.lastMasterMoveTime then
+    -- local masterIdleTime = GetTime() - self.lastMasterMoveTime;
+    -- if masterIdleTime > 1500 then
+    --   local target = GetUserById(self.targetId);
+    --   if target then
+      
+    --     local loc = self:buildPointAroundLoc(target:GetLocation(), target:GetRotation().Yaw)
+    --     self.slavePath:addFirst({
+    --       --listNext
+    --       --listPrev
+    --       loc = loc,
+    --       dir = target:GetRotation().Yaw,
+    --       shiftedLoc = loc,
+    --       pathDist = passedDist,
+    --       isKeyPoint = isAngleBreak;
+    --     })
+    --   end
+    -- end
+    return;
+  end
 
   local currentPoint = self:getCurrentPathPoint();
   if currentPoint.type == "dialog" then
@@ -268,7 +288,7 @@ function BSFollow:goToPathPoint(currentPoint)
     -- point reached
     self.isMoving = true;
     self.useMinimalTreshhold = false;
-    self.lastPassedPoint = self.slavePath:popLast()
+    self.passedPath:addLast(self.slavePath:popLast());
     local nextPathPoint = self:getCurrentPathPoint();
     if not nextPathPoint then -- end of path
       self.isMoving = false;
@@ -297,9 +317,10 @@ function BSFollow:updateMasterPath()
     local newDir = target:GetRotation().Yaw;
     local isAngleBreak = math.abs(math.abs(newDir) - math.abs(lastPathPoint.dir)) > 30 
     if 
-      not isMoving and GetDistanceVector(newLoc, GetMe():GetLocation()) > self.maxFollowDist
+      not self.isMoving and GetDistanceVector(newLoc, GetMe():GetLocation()) > self.maxFollowDist
       or (passedDist > self.pathDetailsMaxTrashhold or ( isAngleBreak and passedDist>self.pathDetailsMinTrashhold))
     then
+      self.lastMasterMoveTime = GetTime();
       self.masterPath:addFirst({
         --listNext
         --listPrev
@@ -337,6 +358,7 @@ function BSFollow:updateSlavePath()
   if newSlaveHead and curSlaveHead ~= newSlaveHead then
     if not curSlaveHead then
       self.followDist = math.random(self.minFollowDist, self.maxFollowDist);
+      log("following on dist ", self.followDist)
       -- pause on start of new path
       -- local delay = math.random(1,5);
       -- ThreadSleepS(delay);
@@ -359,4 +381,14 @@ function BSFollow:buildShiftedLoc(pathPoint)
   local x = pathPoint.loc.X + self.keyPointShift*math.cos(shiftedDir)
   local y = pathPoint.loc.Y + self.keyPointShift*math.sin(shiftedDir)
   return FVector(x,y,pathPoint.loc.Z);
+end
+
+function BSFollow:buildPointAroundLoc(point, dir)
+  local shiftedDir = math.rad(dir - math.random(0,180))
+  
+  local pointShift = math.random(self.keyPointShiftRangeMin, self.keyPointShiftRangeMax+30)
+
+  local x = point.X + pointShift*math.cos(shiftedDir)
+  local y = point.Y + pointShift*math.sin(shiftedDir)
+  return FVector(x,y,point.Z);
 end

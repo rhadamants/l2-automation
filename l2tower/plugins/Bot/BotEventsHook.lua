@@ -96,7 +96,7 @@ end
 --- this function will pause CurrentThread until specific event happen or timeout
 function EventsBus:waitOn(eventName, continueCondition, timeout)
 	if not (self.events[eventName] and "table" == type(CurrentThread)) then
-		eprint("error: waitOn invalid waiter " .. tostring(eventName) .. " " .. type(CurrentThread))
+		eprint("error: waitOn invalid waiter on:" .. tostring(eventName) .. " in thread:" .. type(CurrentThread))
 		return; end
 
 	table.insert(self.events[eventName], 

@@ -126,7 +126,9 @@ function SelectTargetByOId(oId)
 	CancelTarget(false)
 	if oId and oId > 0 then
 		TargetRaw(oId)
-		EventsBus:waitOn("OnMyTargetSelected", function (target) return target:GetId() == oId end)
+		if CurrentThread then
+			EventsBus:waitOn("OnMyTargetSelected", function (target) return target:GetId() == oId end)
+		end
 	end
 	return true;
 end
@@ -142,7 +144,8 @@ function TalkByTarget(oId)
 	return true;
 end
 
-function CastSkill(id, withRetry)
+function CastSkill(id, count, timeout)
+	timeout = timeout or 1000;
 	local skill = GetSkills():FindById(id)
 	if skill and skill:CanBeUsed() then
 		UseSkillRaw(id,false,false)
@@ -150,21 +153,24 @@ function CastSkill(id, withRetry)
 
 		local res = EventsBus:waitOn("OnMagicSkillLaunched", function (user, target, skillId, skillLvl)
 			return myId == user:GetId() and id == skillId;
-		end, 1000)
-		if withRetry and not res then
-			CastSkill(id, withRetry)
+		end, timeout)
+		if res then 
+			return true;
+		elseif count > 0 then
+			return CastSkill(id, (count - 1), timeout)
+		else
+			log("Failed to cast skill:", id);
 		end
-		return true;
 	end
 	return false
 end
 
 -- @return false in case if some skill failed to cast or process has been stopped
-function CastAllByList(list, withRetry)
+function CastAllByList(list, count, timeout)
 	if "table" ~= type(list) then return dprint("CastAllByList(list) - >> list not a table") end
 	CancelTarget(false)
 	for _, id in pairs(list) do
-		if not CastSkill(id, withRetry) then
+		if not CastSkill(id, count, timeout) then
 			return false;
 		end
 	end

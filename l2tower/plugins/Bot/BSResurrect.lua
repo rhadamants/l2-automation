@@ -77,7 +77,8 @@ function BSResurrect:cmdResurrect(jsonCfg)
 		return; end
 
 	if self.thread ~= nil then
-		return; end
+		StopThread(self.thread)
+	end
 
 	self.thread = CreateThread(self, function ()
 		self:resurrectUser(userId, canDelegate)
@@ -92,7 +93,7 @@ function BSResurrect:resurrectUser(userId, canDelegate)
 		self.thread = nil;
 		return eprint("Resurrect: User is not dead");
 		
-	elseif resSkill and resSkill:CanBeUsed() then
+	elseif resSkill then --and resSkill:CanBeUsed() then
 		local resSkillReuse = resSkill:GetReuse();
 
 		dprint("Going to ressurrect ".. user:GetName().." in " .. tostring(resSkillReuse))
@@ -102,17 +103,17 @@ function BSResurrect:resurrectUser(userId, canDelegate)
 
 		if not user or not user:IsAlikeDeath() then
 			self.thread = nil;
-			return eprint("Resurrect: User is not dead"); end
+			return eprint("Resurrect: User is not dead (after reuse)"); end
 
 		LockPause()
 		SelectTargetByOId(userId)
-		CastSkill(self.resSkillId, 3);
+		local resurrected = CastSkill(self.resSkillId, 5, 500);
 		SelectTargetByOId(0)
 		UnlockPause()
 
 	else
 		self.thread = nil;
-		return eprint("Resurrect: Not able to res user");
+		return eprint("Resurrect: Not able to res user (no skill)");
 	end
 
 	self.thread = nil;

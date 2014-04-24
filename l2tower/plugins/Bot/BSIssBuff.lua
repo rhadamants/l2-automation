@@ -250,7 +250,7 @@ function BSIssBuff:processPersonalBuffs()
 
 		if skill and skill:CanBeUsed() then
 			SelectTargetByOId(user:GetId())
-			CastSkill(BaffPersonal[skillName], true)
+			CastSkill(BaffPersonal[skillName], 3, 500)
 			return true
 		 end
 	end
@@ -302,7 +302,7 @@ function BSIssBuff:issBuff()
 			if buffCfg.isPersonal then
 				self:processPersonalBuffs()
 			else
-				CastAllByList(buffCfg.skillList, true)
+				CastAllByList(buffCfg.skillList, 10, 500)
 			end
 		end
 		UnlockPause();
