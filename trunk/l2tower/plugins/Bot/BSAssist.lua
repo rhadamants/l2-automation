@@ -60,7 +60,7 @@ function BSAssist:startAssist()
 	self.assistCallbacks["OnTargetSelected"] = 
 		EventsBus:addCallback("OnTargetSelected", 
 			function(user, target)
-				dprint("OnTargetSelected")
+				-- dprint("OnTargetSelected")
 				if user:GetId() == self.masterId then
 					self:masterTargetChanged(user, target)
 				end
