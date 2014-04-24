@@ -159,7 +159,7 @@ namespace BotController.ViewModel
       PauseWatchBuffCommand = new RelayCommand(IssBuffManager.Current.PauseWatchBuff);
 
       ResUserCommand = new RelayCommand<User>(UserResurrectionManager.RessurectUser);
-      UserResurrectionManager.OnDeadUsersListChanged += OnDeadUsersListChanged;
+      UserResurrectionManager.DeadUsersListChanged += OnDeadUsersListChanged;
       OnDeadUsersListChanged(null, null);
 
       ChatManager.OnMessangersListChanged += OnMessangersListChanged;

@@ -130,6 +130,7 @@
           <ComboBox x:Name="BufferSelector" ItemsSource="{Binding BuffersList}" SelectedItem="{Binding SelectedBuffer, Mode=TwoWay}"  Margin="0,8"/>
         </StackPanel>
       </Border>
+      <CheckBox Content="Auto ressurrect" IsChecked="{Binding AutoRessurrect, Mode=TwoWay}" Margin="4"/>
       <!--RESURRECT-->
       <Border BorderBrush="Black" BorderThickness="1" Visibility="{Binding HasDeadUsers, Converter={StaticResource ValueToVisibilityConverter}}">
         <Grid>
