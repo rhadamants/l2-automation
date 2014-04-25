@@ -1,9 +1,10 @@
 BuffDebug = false
 CharSkills = {
 	[139] = { -- Sigel Knight
+		cube = 10043, -- Призыв Куба Рыцаря
 		jumpSkill = 10015,
-		massAttackSkills = {10013, 10014},
-		singleAttackSkills = {10008, 10011},--10011, 10009, 10008, 10010},
+		massAttackSkills = {},--{10013, 10014},
+		singleAttackSkills = {10008, 10011, 10009},--10011, 10008, 10010},
 	};
 	[141] = { -- Othell Rogue
 		singleAttackSkills = {
@@ -19,13 +20,21 @@ CharSkills = {
 	},
 	[140] = { -- Tyrr Warrior
 		jumpSkill = 10267,
-		selfBuffSkill = 10292,
-		massAttackSkills = {10288},
-		singleAttackSkills = {10262, 10260, 10265, 10258}
+		selfBuffSkills = {
+			10292, -- 10270	Последняя Энергия
+			10297, -- Дух Убийцы
+		},
+		massAttackSkills = {},--{10288},
+		singleAttackSkills = {
+			10258, 
+			-- 10262, -- Мощный Бомбардир (push mobs)
+			10260, 
+			-- 10265, -- Взрыв Энергии (tend to be mass)
+		},
 	};
 	[144] = { -- ISS
 		jumpSkill = 11508,
-		massAttackSkills = {11513, 11514},
+		massAttackSkills = {},--{11513, 11514},
 		singleAttackSkills = {11509, 11510, 11511},
 	};
 	
@@ -70,6 +79,26 @@ function MobsCount(range)
 	return i
 end
 
+LastCubeSummonTime = 0;
+function SumCube()
+	if SummonCubeSkill then 
+		local timeSinceUse = os.time() - LastCubeSummonTime;
+		if timeSinceUse > 5 * 60 and CastSkill(SummonCubeSkill) then
+			LastCubeSummonTime = os.time();
+		end
+	end
+end
+
+function ProcessSelfBuffs()
+	if SelfBuffSkills then
+		for _,buffSkill in ipairs(SelfBuffSkills) do
+			if not GetMe():GotBuff(buffSkill) and CastSkill(buffSkill) then
+				Sleep(700)
+			end
+		end
+	end
+end
+
 function Nuke(target)  
 	dprint("Nuke(target)")
 	if (target:GetDistance() < 500 
@@ -95,16 +124,16 @@ function Init()
 	MassAttackSkills = charCfg.massAttackSkills
 	JumpSkill = charCfg.jumpSkill
 	SingleAttackSkills = charCfg.singleAttackSkills
-	SelfBuffSkill = charCfg.selfBuffSkill;
+	SelfBuffSkills = charCfg.selfBuffSkills;
+	SummonCubeSkill = charCfg.cube;
 end
 
 Init()
 
 repeat
     if not IsPaused() then
-    	if SelfBuffSkill and not GetMe():GotBuff(SelfBuffSkill) then
-			CastSkill(SelfBuffSkill)
-		end
+    	ProcessSelfBuffs();
+		SumCube();
 
 		local target = GetTarget()
         if  --GetMe():GetMp() > 200 and 
