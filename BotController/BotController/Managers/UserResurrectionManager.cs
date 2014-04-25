@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using BotController;
 using BotController.Model;
 using Newtonsoft.Json.Linq;
@@ -24,7 +25,14 @@ namespace BotController.Managers
 //      new User { Name = "Test dead", Class = 144, Role = UserRoles.RDD}
     };
 
+    private static readonly DispatcherTimer _autoresCheck = new DispatcherTimer(){Interval = TimeSpan.FromSeconds(20)};
+
     public static event EventHandler DeadUsersListChanged;
+
+    static UserResurrectionManager()
+    {
+      _autoresCheck.Tick += AutoresCheckOnTick;
+    }
 
     public static void UpdateDeadUsers(int userHandleId, JObject data)
     {
@@ -68,20 +76,27 @@ namespace BotController.Managers
     public static void SetAutoRes(bool state)
     {
       if (state)
-      {
         DeadUsersListChanged += OnDeadUsersListChanged;
-      }
       else
-      {
         DeadUsersListChanged -= OnDeadUsersListChanged;
-      }
     }
 
     private static void OnDeadUsersListChanged(object sender, EventArgs eventArgs)
     {
       var userToRes = GetNextUserToRes();
-      if (userToRes != null)
-        RessurectUser(userToRes);
+      if (userToRes == null)
+        return;
+
+      _autoresCheck.Start();
+      RessurectUser(userToRes);
+    }
+
+    private static void AutoresCheckOnTick(object sender, EventArgs eventArgs)
+    {
+      _autoresCheck.Stop();
+      var deadUsersListChanged = DeadUsersListChanged;
+      if (deadUsersListChanged != null)
+        deadUsersListChanged(null, null);
     }
 
     public static void ResurrectByIss(User target)
