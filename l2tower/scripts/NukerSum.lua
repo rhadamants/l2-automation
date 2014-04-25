@@ -8,6 +8,7 @@
 -- CONFIG
 UseManaRecharge = true;
 UseNuke = true;
+SummonCube = true;
 
 SummonSoulshotsEnabled = true;
 SummonSSLimit = 5000;
@@ -19,6 +20,7 @@ SummonServitorSkillId = 11257; -- 11257 - Saber Tooth Cougar; 11258 - for Summon
 -- CONSTANTS
 ManaRechargeSkill = 11269; -- Разделение Маны
 SelfBuffSkill = 11288; -- Последнее Разделение Судьбы
+SkillId_Cube = 11268; -- Вызвать Карающий Куб
 AttackNewTargetDelay = 100; --ms
 
 ItemId_CryR = 17371;
@@ -129,6 +131,16 @@ function ActivateShots(state)
 	end
 end
 
+LastCubeSummonTime = 0;
+function SumCube()
+	if SummonCube then 
+		local timeSinceUse = os.time() - LastCubeSummonTime;
+		if timeSinceUse > 5 * 60 and CastSkill(SkillId_Cube) then
+			LastCubeSummonTime = os.time();
+		end
+	end
+end
+
 repeat
     if not IsPaused() then
     	SumSummonSS();
@@ -136,6 +148,7 @@ repeat
     	if not (ShotsActivated) and (GetSummonCount() > 0) then
     		ActivateShots(true);
     	end
+    	SumCube();
 
 		local me = GetMe();
     	-- mp recharge
