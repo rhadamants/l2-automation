@@ -215,8 +215,25 @@ function MobsCount(range)
 end
 
 PatsMasterBuff = {
+	[14930] = "Warrior", -- Saber Tooth Cougar
+	[14954] = "Warrior", -- Saber Tooth Cougar
+	[14955] = "Warrior", -- Saber Tooth Cougar
+	[14956] = "Warrior", -- Saber Tooth Cougar
+	[14957] = "Warrior", -- Saber Tooth Cougar
 	[14958] = "Warrior", -- Saber Tooth Cougar
+	[14959] = "Warrior", -- Saber Tooth Cougar
+	[14960] = "Warrior", -- Saber Tooth Cougar
+	[14972] = "Warrior", -- Saber Tooth Cougar
+	
+	[14931] = "Wizard", -- Summon Soul Reaper
+	[14961] = "Wizard", -- Summon Soul Reaper
+	[14962] = "Wizard", -- Summon Soul Reaper
+	[14963] = "Wizard", -- Summon Soul Reaper
+	[14964] = "Wizard", -- Summon Soul Reaper
 	[14965] = "Wizard", -- Summon Soul Reaper
+	[14966] = "Wizard", -- Summon Soul Reaper
+	[14967] = "Wizard", -- Summon Soul Reaper
+	[14973] = "Wizard", -- Summon Soul Reaper
 }
 
 function DefineBuffBySummon(playerName)
@@ -229,7 +246,13 @@ function DefineBuffBySummon(playerName)
 		end
 	end
 	if playerPat ~= nil then
+		if not PatsMasterBuff[playerPat:GetNpcId()] then
+			eprint("Sum has unknown pet: " .. tostring(playerPat:GetNpcId()));
+			return nil;
+		end
 		return PatsMasterBuff[playerPat:GetNpcId()];
+	else
+		eprint("No pets for " .. tostring(playerName));
 	end
 end
 
