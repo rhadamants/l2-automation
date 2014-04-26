@@ -21,6 +21,13 @@ namespace BotController.Managers
       if (user == null)
         return;
 
+      if (user.Role.HasFlag(UserRoles.Heal))
+      {
+        Log.Info("We shouldn't enable assist for heal: {0} -> assist disabled", user.Name);
+        user.Config.AssistMaster = null;
+        return;
+      }
+
       ServerManager.SendMessageToClient(user, CreateStartAssistMessage(user));
     }
 
