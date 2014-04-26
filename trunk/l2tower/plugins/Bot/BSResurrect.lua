@@ -47,7 +47,7 @@ function BSResurrect:checkForDead()
 end
 
 function BSResurrect:createDeadUserRecord(user)
-	return {n=user:GetName(),c=user:GetClass(),i=user:GetId()};
+	return {n=user:GetName(),c=user:GetClass(),i=user:GetId(),f=user:IsFriend()};
 end
 
 function BSResurrect:isDeadsChanged(deads)

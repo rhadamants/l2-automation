@@ -48,6 +48,8 @@ namespace BotController.ViewModel
 
       if (selectedBuffer == null || !BuffersList.Contains(selectedBuffer))
         SelectedBuffer = BuffersList.FirstOrDefault();
+      else
+        SelectedBuffer = selectedBuffer;
     }
 
     #endregion

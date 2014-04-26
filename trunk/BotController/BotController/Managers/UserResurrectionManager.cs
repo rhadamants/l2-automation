@@ -59,7 +59,7 @@ namespace BotController.Managers
       var selectedPrio = 0;
       User selected = null;
       
-      foreach (var user in DeadUsers)
+      foreach (var user in DeadUsers.Where(user => user.IsFriend))
       {
         var userPrioKey = prios.ContainsKey(user.Class) ? user.Class : 0;
         var userPrio = ResurrectionPriorities[userPrioKey];

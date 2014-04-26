@@ -23,6 +23,7 @@ namespace BotController.Model
     public string Name { get; set; }
     public int Class { get; set; }
     public UserRoles Role { get; set; }
+    public bool IsFriend { get; set; }
 
     public UserConfig Config { get; set; }
 
@@ -47,7 +48,8 @@ namespace BotController.Model
       {
         Id = dto["i"] != null ? (int) dto["i"] : 0,
         Name = dto["n"] != null ? (string)dto["n"] : "No name ?",
-        Class = dto["c"] != null ? (int)dto["c"] : 0
+        Class = dto["c"] != null ? (int)dto["c"] : 0,
+        IsFriend = dto["f"] != null && (bool)dto["f"]
       };
     }
 
