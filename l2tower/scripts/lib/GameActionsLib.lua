@@ -1,4 +1,6 @@
 dprint = function(...) ShowToClient("debug", ({...})[1]); end
+eprint = function(...) ShowToClient("ERROR", ({...})[1]); end
+iprint = function(...) ShowToClient("INFO", ({...})[1]); end
 
 log = function(...)
     local resultLine = "";

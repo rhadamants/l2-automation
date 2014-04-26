@@ -6,16 +6,16 @@
 -- Also uses MP recharge and "Skills split buff" (I don't know proper English name for it)
 
 -- CONFIG
-UseManaRecharge = true;
-UseNuke = true;
-SummonCube = true;
+-- Sum_UseManaRecharge = true;
+-- Sum_UseNuke = true;
+-- Sum_SummonCube = true;
 
-SummonSoulshotsEnabled = true;
+-- Sum_SummonSoulshotsEnabled = true;
 SummonSSLimit = 5000;
 SummonBSSLimit = 0; -- 0 to disable
 
-RequiredSummonsCount = 2;
-SummonServitorSkillId = 11257; -- 11257 - Saber Tooth Cougar; 11258 - for Summon Soul Reaper; 11256 - for Summon Armored Bear
+-- Sum_RequiredSummonsCount = 2;
+-- SummonServitorSkillId = 11257; -- 11257 - Saber Tooth Cougar; 11258 - for Summon Soul Reaper; 11256 - for Summon Armored Bear
 
 -- CONSTANTS
 ManaRechargeSkill = 11269; -- Разделение Маны
@@ -35,8 +35,6 @@ if GetMe():GetClass() ~= 145 then
 	ShowToClient("ERROR","You are not Wynn Summoner, so this script is not for you");
 	return;
 end
--- do not waste CPU if there is no job to do
-if not (UseNuke or UseManaRecharge or SummonSoulshotsEnabled) then return; end
 
 dofile(package.path .. "..\\..\\scripts\\lib\\GameActionsLib.lua");
 
@@ -96,7 +94,7 @@ function SumNuke()
 end
 
 function SumSummonSS()
-	if not SummonSoulshotsEnabled or GetItemAmountById(ItemId_CryR) == 0 then
+	if not Sum_SummonSoulshotsEnabled or GetItemAmountById(ItemId_CryR) == 0 then
 		return; end
 
 	if (SummonSSLimit > 0 and GetItemAmountById(ItemId_SS) < SummonSSLimit) 
@@ -109,7 +107,7 @@ function SumSummonSS()
 end
 
 function SumSummons()
-	if (GetSummonCount() < RequiredSummonsCount) then
+	if (GetSummonCount() < Sum_RequiredSummonsCount) then
 		if (GetSummonCount() == 0) then
 			ActivateShots(false);
 		end;
@@ -133,7 +131,7 @@ end
 
 LastCubeSummonTime = 0;
 function SumCube()
-	if SummonCube then 
+	if Sum_SummonCube then 
 		local timeSinceUse = os.time() - LastCubeSummonTime;
 		if timeSinceUse > 5 * 60 and CastSkill(SkillId_Cube) then
 			LastCubeSummonTime = os.time();
@@ -152,7 +150,7 @@ repeat
 
 		local me = GetMe();
     	-- mp recharge
-        if UseManaRecharge and me:GetMp() > 1400 and GetPartyList():GetCount() > 2 and GetPartyMinMpPercent() < 90 and not me:IsBlocked(true) then
+        if Sum_UseManaRecharge and me:GetMp() > 1400 and GetPartyList():GetCount() > 2 and GetPartyMinMpPercent() < 90 and not me:IsBlocked(true) then
 			CastSkill(ManaRechargeSkill);
 		end
 		-- self buff
@@ -160,7 +158,7 @@ repeat
 			CastSkill(SelfBuffSkill);
 		end
 		-- nuke
-		if UseNuke then
+		if Sum_UseNuke then
 			SumNuke();
 		end
 	end

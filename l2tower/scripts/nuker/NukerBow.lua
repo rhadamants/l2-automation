@@ -5,93 +5,27 @@ if GetMe():GetClass() ~= 142 then
 end
 
 BuffDebug = false
-AttackNewTargetDelay = 100;--ms
+--AttackNewTargetDelay = 100;--ms
 
 Debuff = 10801;
 
 RangeAttackSkills = {
 			10762, -- Скоростной Выстрел
 			10763, -- Точечный Удар
-			10760, -- Выстрел Торнадо
+			--10760, -- Выстрел Торнадо
 		};
 
 MeleeAttackSkills = {
 			10761, -- Удар Луком
 			10774, -- Отступление
 		};
-MassAttackSkills = {
-		    --10760, -- Выстрел Торнадо
+MassAttackSkills = UseMassSkills and {
+		    10760, -- Выстрел Торнадо
 			10771, -- Туча Стрел
 			10772, -- Проливной Дождь Стрел
-		}
+		} or {};
 RangedAttackCounter = 0;
 
-
-	function dprint(msg)
-		if BuffDebug then
-			ShowToClient("DEBUG",msg);
-		end
-	end
-
-	function CastSkill(id)
-		skill = GetSkills():FindById(id)
-		if skill and skill:CanBeUsed() and skill:GetReuse() == 0 then
-			UseSkillRaw(id,false,false)
-			return true
-		end
-		return false
-	end
-
-	function CastOneByList(list)
-		if "table" ~= type(list) then return dprint("CastOneByList(list) - >> list not a table") end
-		for _, id in pairs(list) do
-			if CastSkill(id) then
-				return true;
-			end
-		end
-	end
-
-	function CastOneByOneList(list, counter)
-		if "table" ~= type(list)  then return dprint("CastOneByOneList(list) - >> list not a table") end
-		--or "numer" ~= type(counter) or counter < 0
-		repeat
-			counter = counter + 1;
-			if #list < counter then
-				counter = 1;
-			end
-		until CastSkill(list[counter])
-		SingleAttackCounter = counter
-		return true;
-		--[[for _, id in pairs(list) do
-			if CastSkill(id) then
-				return true;
-			end
-		end]]
-	end
-
-	function MobsAroundTarget(targer, range)
-		
-		local mobs = GetMonsterList()
-		local i=0
-		for m in mobs.list do
-			if m:GetHpPercent() ~= 0 and targer:GetRangeTo(m) <= range then
-				i = i+1
-			end
-		end
-		return i
-		
-	end
-
-	function MobsCount(range)
-		mobs = GetMonsterList()
-		i=0
-		for m in mobs.list do
-			 if m:GetDistance() <= range and m:GetHpPercent() ~= 0 then
-				 i = i+1
-			 end
-		end
-		return i
-	end
 
 function InitDebuffSkill()
 	DebuffSkill = GetSkills():FindById(Debuff)
@@ -99,7 +33,6 @@ function InitDebuffSkill()
 end
 
 function Nuke(target)  
-	dprint("Nuke(target)")
 	local dist = target:GetDistance();
 	if 
 		InitDebuffSkill() and DebuffSkill:CanBeUsed() and DebuffSkill:GetReuse() == 0 and CastSkill(Debuff)

@@ -1,9 +1,12 @@
-BuffDebug = false
+-- should be loaded from script DD.lua
+
+--UseMassSkills - set by the environment
+
 CharSkills = {
 	[139] = { -- Sigel Knight
 		cube = 10043, -- Призыв Куба Рыцаря
 		jumpSkill = 10015,
-		massAttackSkills = {},--{10013, 10014},
+		massAttackSkills = {10013, 10014},
 		singleAttackSkills = {10008, 10011, 10009},--10011, 10008, 10010},
 	};
 	[141] = { -- Othell Rogue
@@ -23,61 +26,27 @@ CharSkills = {
 		selfBuffSkills = {
 			10292, -- 10270	Последняя Энергия
 			10297, -- Дух Убийцы
+
 		},
-		massAttackSkills = {},--{10288},
+		massAttackSkills = {
+			10288,
+			10265, -- Взрыв Энергии (tend to be mass)
+		},
 		singleAttackSkills = {
 			10258, 
-			-- 10262, -- Мощный Бомбардир (push mobs)
+			10262, -- Мощный Бомбардир (push mobs)
 			10260, 
-			-- 10265, -- Взрыв Энергии (tend to be mass)
+			
 		},
 	};
 	[144] = { -- ISS
 		jumpSkill = 11508,
-		massAttackSkills = {},--{11513, 11514},
+		massAttackSkills = {11513, 11514},
 		singleAttackSkills = {11509, 11510, 11511},
 	};
 	
 }
 
-function dprint(msg)
-	if BuffDebug then
-		ShowToClient("DEBUG",msg);
-	end
-end
-
-function eprint(msg)
-	ShowToClient("ERROR",msg);
-end
-
-function CastSkill(id)
-	skill = GetSkills():FindById(id)
-	if skill and skill:CanBeUsed() and skill:GetReuse() == 0 then
-		UseSkillRaw(id,false,false)
-		return true
-	end
-	return false
-end
-
-function CastOneByList(list)
-	if "table" ~= type(list) then return dprint("CastOneByList(list) - >> list not a table") end
-	for _, id in pairs(list) do
-		if CastSkill(id) then
-			return true;
-		end
-	end
-end
-
-function MobsCount(range)
-	mobs = GetMonsterList()
-	i=0
-	for m in mobs.list do
-		 if m:GetDistance() <= range and m:GetHpPercent() ~= 0 then
-			 i = i+1
-		 end
-	end
-	return i
-end
 
 LastCubeSummonTime = 0;
 function SumCube()
@@ -99,8 +68,7 @@ function ProcessSelfBuffs()
 	end
 end
 
-function Nuke(target)  
-	dprint("Nuke(target)")
+function Nuke(target)
 	if (target:GetDistance() < 500 
 		and (MobsCount(250) > 1 
 				and CastOneByList(MassAttackSkills)
@@ -121,7 +89,7 @@ function Init()
 		return eprint("Unable to init nuker script for class: " .. GetMe():GetClass());
 	end
 
-	MassAttackSkills = charCfg.massAttackSkills
+	MassAttackSkills = UseMassSkills and charCfg.massAttackSkills or {}
 	JumpSkill = charCfg.jumpSkill
 	SingleAttackSkills = charCfg.singleAttackSkills
 	SelfBuffSkills = charCfg.selfBuffSkills;
