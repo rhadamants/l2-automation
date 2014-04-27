@@ -46,7 +46,7 @@ end
 
 function CastSkill(id)
 	skill = GetSkills():FindById(id)
-	if skill and skill:CanBeUsed() and skill:GetReuse() == 0 and skill:IsSkillAvailable() then
+	if skill and skill:CanBeUsed() and skill:GetReuse() == 0 then
 		UseSkillRaw(id,false,false)
 		return true
 	end
