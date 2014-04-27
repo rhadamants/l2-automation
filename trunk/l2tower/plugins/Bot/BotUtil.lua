@@ -88,6 +88,7 @@ function LockPause()
 	if L2TowerPausedLock == 1 then
 		L2TowerPaused = IsPaused();
 		if not L2TowerPaused then
+			dprint("lock Pause");
 			SetPause(true);
 		end
 	end
@@ -98,6 +99,7 @@ function UnlockPause()
 
 	if L2TowerPausedLock == 0 then
 		if not L2TowerPaused then
+			dprint("unlock");
 			SetPause(false);
 		end
 	elseif L2TowerPausedLock < 0 then
@@ -147,28 +149,39 @@ end
 function CastSkill(id, count, timeout)
 	timeout = timeout or 1000;
 	local skill = GetSkills():FindById(id)
-	if skill and skill:CanBeUsed() then
-		UseSkillRaw(id,false,false)
-		local myId = GetMe():GetId();
+	if not skill then
+		log("Failed to cast skill (no skill):", id);
+		return false; end
 
-		local res = EventsBus:waitOn("OnMagicSkillLaunched", function (user, target, skillId, skillLvl)
-			return myId == user:GetId() and id == skillId;
-		end, timeout)
-		if res then 
-			return true;
-		elseif count > 0 then
-			return CastSkill(id, (count - 1), timeout)
-		else
-			log("Failed to cast skill:", id);
-		end
+	while not skill:CanBeUsed() and count > 0 do
+		ThreadSleepMs(timeout);
+		count = count - 1;
 	end
-	return false
+
+	if not skill:CanBeUsed() then
+		log("Failed to cast skill (can't be used):", id);
+		return false; end
+
+	UseSkillRaw(id,false,false)
+	local myId = GetMe():GetId();
+
+	local res = EventsBus:waitOn("OnMagicSkillLaunched", function (user, target, skillId, skillLvl)
+		return myId == user:GetId() and id == skillId;
+	end, timeout)
+	if res then 
+		return true;
+	elseif count > 0 then
+		return CastSkill(id, (count - 1), timeout)
+	end
+
+	log("Failed to cast skill (some error):", id);
+	return false;
 end
 
 -- @return false in case if some skill failed to cast or process has been stopped
 function CastAllByList(list, count, timeout)
 	if "table" ~= type(list) then return dprint("CastAllByList(list) - >> list not a table") end
-	CancelTarget(false)
+	--CancelTarget(false)
 	for _, id in pairs(list) do
 		if not CastSkill(id, count, timeout) then
 			return false;
