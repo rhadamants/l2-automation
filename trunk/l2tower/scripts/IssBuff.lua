@@ -6,6 +6,8 @@ OOPmode = false; -- should leave party after buff
 InviteMode = false; -- should invite character for buff
 InviteName = "ACat" -- name of char to invite
 
+IssBuff = {}
+
 local ClassesType = {
 	[17] = "Wizard",	-- Prophet
 	[21] = "Warrior",	-- Swordsinger
@@ -151,6 +153,7 @@ BuffsConfig = {
 		lastUsed = 0,
 		useInterval = 30 * 60,
 		saveInterval = 2 * 60,
+		minTimeout = 1 * 60,
 		isPersonal = true,
 		--skillList = Baff20min;
 	},
@@ -158,52 +161,81 @@ BuffsConfig = {
 		lastUsed = 0,
 		useInterval = 30 * 60,
 		saveInterval = 2 * 60,
+		minTimeout = 1 * 60,
 		skillList = Baff20min;
 	},
 	{
 		lastUsed = 0,
 		useInterval = 5 * 60, -- in min
 		saveInterval = 1 * 60,
+		minTimeout = 30,
 		skillList = Baff5min;
 	},
 };
 
-function dprint(msg)
+function IssBuff:dprint(msg)
 	if BuffDebug then
 		ShowToClient("DEBUG",msg);
 	end
 end
 
-function eprint(msg)
+function IssBuff:eprint(msg)
 	ShowToClient("ERROR",msg);
 end
 
-function CastSkill(id)
-	--if nil == tonumber(list) then return dprint("CastSkill(id) - >> id not a number") end
-	skill = GetSkills():FindById(id)
-	--dprint("CastSkill(id) ->> skill ".. (nil ~= skill).. " skill:CanBeUsed()" .. skill:CanBeUsed())
-	if skill and skill:CanBeUsed() then
-		UseSkillRaw(id,false,false)
-		return true
-	end
-	return false
+function IssBuff:printf(msg, ...)
+	ShowToClient("IssBuff",string.format(msg, ...));
 end
 
-function CastAllByList(list)
-	if "table" ~= type(list) then return dprint("CastAllByList(list) - >> list not a table") end
+function IssBuff:ValidateSkillUse(id, waitReuse, count, timeout)
+	waitReuse = waitReuse or false;
+	count = count or 0;
+	timeout = timeout or 250;
+
+	local skill = GetSkills():FindById(id)
+	if not skill then
+		self:eprint("No skill "..tostring(id))
+		return false; end
+
+	if waitReuse and skill:GetReuse() > 0 then Sleep(skill:GetReuse() + 100) end
+
+	while not skill:CanBeUsed() and count > 0 do
+		Sleep(timeout);
+		count = count - 1;
+	end
+
+	if not skill:CanBeUsed() then
+		self:eprint("Failed to cast skill (can't be used):"..tostring(id));
+		return false; end
+
+	return true;
+end
+
+function IssBuff:CastSkill(id, waitReuse, count, timeout)
+	if not self:ValidateSkillUse(id, waitReuse, count, timeout) then
+		return false;
+	end
+
+	UseSkillRaw(id,false,false);
+	return true;
+end
+
+function IssBuff:CastAllByList(list, waitReuse, count, timeout)
+	if "table" ~= type(list) then return self:dprint("CastAllByList(list) - >> list not a table") end
 	SetPause(true)
 	CancelTarget(false)
+	local res = true;
 	for _, id in pairs(list) do
-		if CastSkill(id) then
-			Sleep(900)
-		else
-			--ShowToClient("SYS", "Fail to cast " .. id)
+		if not self:CastSkill(id, waitReuse, count, timeout) then
+			res = false;
 		end
+		Sleep(900)
 	end
 	SetPause(false)
+	return res;
 end
 
-function MobsCount(range)
+function IssBuff:MobsCount(range)
 	mobs = GetMonsterList()
 	i=0
 	for m in mobs.list do
@@ -236,7 +268,7 @@ PatsMasterBuff = {
 	[14973] = "Wizard", -- Summon Soul Reaper
 }
 
-function DefineBuffBySummon(playerName)
+function IssBuff:DefineBuffBySummon(playerName)
 	local playerPat = nil;
 	local pets = GetPetList();
 	for Apet in pets.list do
@@ -247,45 +279,51 @@ function DefineBuffBySummon(playerName)
 	end
 	if playerPat ~= nil then
 		if not PatsMasterBuff[playerPat:GetNpcId()] then
-			eprint("Sum has unknown pet: " .. tostring(playerPat:GetNpcId()));
+			self:eprint("Sum has unknown pet: " .. tostring(playerPat:GetNpcId()));
 			return nil;
 		end
 		return PatsMasterBuff[playerPat:GetNpcId()];
 	else
-		eprint("No pets for " .. tostring(playerName));
+		self:eprint("No pets for " .. tostring(playerName));
 	end
 end
 
-function ProcessPersonalBuffs()
-	local function buffPersonalByName(user)
-		local userClass = user:GetClass();
-		local skillName = userClass == 145 and DefineBuffBySummon(user:GetName()) or ClassesType[user:GetClass()];
-		if not skillName then return false; end
-		local skill = GetSkills():FindById(BaffPersonal[skillName])
-		-- wait for skill ready
-		if skill and skill:GetReuse() > 0 then Sleep(skill:GetReuse() + 100) end
-		if skill and skill:CanBeUsed() then
-			Target(user:GetName())
-			UseSkillRaw(BaffPersonal[skillName],false,false)
-			Sleep(700)
-			ClearTargets();
-			CancelTarget(false)
-			return true
-		 end
+function IssBuff:BuffPersonalByName(user)
+	local skillName = ClassesType[user:GetClass()]
+	local userClass = user:GetClass();
+	local skillName = userClass == 145 and self:DefineBuffBySummon(user:GetName()) or ClassesType[user:GetClass()];
+	local skillId = BaffPersonal[skillName];
+	
+	if self:ValidateSkillUse(skillId, true, 4, 250) then
+		Target(user:GetId())
+		UseSkillRaw(skillId,false,false);
+		Sleep(700)
+		ClearTargets();
+		CancelTarget(false)
 	end
+end
+
+function IssBuff:ProcessPersonalBuffs()
+	self:BuffPersonalByName(GetMe())
 	
-	buffPersonalByName(GetMe())
-	
+	local res = true;
 	local party = GetPartyList()
 	if party:GetCount() > 0 then
 		for user in party.list do
-			buffPersonalByName(user)
+			if not user:IsAlikeDeath() and user:GetDistance() < 1000 then
+				if not self:BuffPersonalByName(user) then
+					self:eprint("Fail to buff user "..user:GetName())
+					res = false;
+				end
+			else
+				self:printf("Fail to buff user %s (dead %s, dist %s)", user:GetName(), user:IsAlikeDeath(), user:GetDistance());
+			end
 		end
 	end
+	return res;
 end
 
-
-function IssBuff()
+function IssBuff:IssBuff()
 	local wasProcessed = false;
 	for _, buffCfg in pairs(BuffsConfig) do
 		local timeSinceUse = os.time() - buffCfg.lastUsed;
@@ -294,39 +332,46 @@ function IssBuff()
 			and (not buffCfg.isPersonal) -- just don't do personal buffs under mobs attack
 		) or ( -- use when we are safe
 			(timeSinceUse > (buffCfg.useInterval - buffCfg.saveInterval)) 
-			and (MobsCount(150) == 0)
+			and (self:MobsCount(150) == 0)
 		) then
-			if (InviteMode and not IsInParty()) then
+			if (InviteMode and not self:IsInParty()) then
 				Command("/invite "..InviteName)
 				for i=1, (5000/500) do -- wait for party for 4s, check every 500ms
-					if IsInParty() then break; end
+					if self:IsInParty() then break; end
 					Sleep(500)
 				end
-				if not IsInParty() then eprint("Fail to get party") return; end
+				if not self:IsInParty() then self:eprint("Fail to get party") return; end
 			end
-			buffCfg.lastUsed = os.time()
+
 			wasProcessed = true;
-			if buffCfg.isPersonal and (MobsCount(150) == 0) then
-				ProcessPersonalBuffs()
+			if buffCfg.isPersonal and (self:MobsCount(150) == 0) and self:ProcessPersonalBuffs() then
+				buffCfg.lastUsed = os.time();
+			elseif self:CastAllByList(buffCfg.skillList, false, 4, 250) then
+				buffCfg.lastUsed = os.time();
 			else
-				CastAllByList(buffCfg.skillList)
+				self:eprint("Fail to buff")
 			end
 		end
 	end
 	return wasProcessed
 end
 
-function IsInParty()
+function IssBuff:IsInParty()
 	return (GetPartyMaster() ~= nil);
 end
 
+-- dofile(package.path .. "..\\..\\scripts\\lib\\RuntimeLogs.lua");
+-- RuntimeLogs:interceptByName("IssBuff")
+
 repeat
+	local self = IssBuff;
     if not IsPaused()
-	and (InviteMode or (OOPmode and IsInParty()) or not OOPmode)
+	and (InviteMode or (OOPmode and self:IsInParty()) or not OOPmode)
 	then
-		if IssBuff() and (OOPmode or InviteMode) then
+		if self:IssBuff() and (OOPmode or InviteMode) then
 			LeaveParty();
 		end
     end
     Sleep(5000)
 until false
+

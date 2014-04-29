@@ -147,6 +147,7 @@ function TalkByTarget(oId)
 end
 
 function CastSkill(id, count, timeout)
+	count = count or 0;
 	timeout = timeout or 1000;
 	local skill = GetSkills():FindById(id)
 	if not skill then
