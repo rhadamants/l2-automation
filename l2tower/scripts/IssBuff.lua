@@ -153,6 +153,7 @@ Baff5min = {
 
 BuffsConfig = {
 	{	-- personal buffs are processed by separate function
+		name = "harmony",
 		lastUsed = 0,
 		useInterval = 30 * 60,
 		saveInterval = 2 * 60,
@@ -251,6 +252,19 @@ function IssBuff:MobsCount(range)
 	return i
 end
 
+function PartyWithMe()
+	local partyTable = {GetMe()};
+	local party = GetPartyList()
+	for user in party.list do
+		table.insert(partyTable, user)
+	end
+	local i, user;
+	return function ()
+		i, user = next(partyTable, i)
+		return user;
+	end
+end
+
 PatsMasterBuff = {
 	[14930] = "Warrior", -- Saber Tooth Cougar
 	[14954] = "Warrior", -- Saber Tooth Cougar
@@ -293,11 +307,14 @@ function IssBuff:DefineBuffBySummon(playerName)
 	end
 end
 
-function IssBuff:BuffPersonalByName(user)
-	local skillName = ClassesType[user:GetClass()]
+function IssBuff:getHarmonyForUser(user)
 	local userClass = user:GetClass();
 	local skillName = userClass == 145 and (self:DefineBuffBySummon(user:GetName()) or "Wizard") or ClassesType[user:GetClass()];
-	local skillId = BaffPersonal[skillName];
+	return BaffPersonal[skillName];
+end
+
+function IssBuff:BuffPersonalByName(user)
+	local skillId = self:getHarmonyForUser(user);
 	
 	if self:ValidateSkillUse(skillId, true, 4, 250) then
 		Target(user:GetId())
@@ -310,23 +327,16 @@ function IssBuff:BuffPersonalByName(user)
 end
 
 function IssBuff:ProcessPersonalBuffs()
-	self:BuffPersonalByName(GetMe())
-	
-	local res = true;
-	local party = GetPartyList()
-	if party:GetCount() > 0 then
-		for user in party.list do
-			if not user:IsAlikeDeath() and user:GetDistance() < 1000 then
-				if not self:BuffPersonalByName(user) then
-					self:eprint("Fail to buff user "..user:GetName())
-					res = false;
-				end
-			else
-				self:printf("Fail to buff user %s (dead %s, dist %s)", user:GetName(), user:IsAlikeDeath(), user:GetDistance());
+	for user in PartyWithMe() do
+		if not user:IsAlikeDeath() and user:GetDistance() < 1000 then
+			if not self:BuffPersonalByName(user) then
+				self:eprint("Fail to buff user "..user:GetName())
 			end
+		else
+			self:printf("Fail to buff user %s (dead %s, dist %s)", user:GetName(), user:IsAlikeDeath(), user:GetDistance());
 		end
 	end
-	return res;
+	return true;
 end
 
 function IssBuff:IssBuff()
@@ -390,15 +400,11 @@ end
 function IssBuff:checkPartyBuff()
 	for _, buffCfg in pairs(BuffsConfig) do
 		if buffCfg.isPersonal then
-			-- todo
+			-- we often need to buff some special buffs to party members
 		else
 			for _,skillId in pairs(buffCfg.skillList) do
-				self:ensureUserHasBuff(GetMe(), skillId, buffCfg.minTimeout);
-				local party = GetPartyList()
-				if party:GetCount() > 0 then
-					for user in party.list do
-						self:ensureUserHasBuff(user, skillId, buffCfg.minTimeout);
-					end
+				for user in PartyWithMe() do
+					self:ensureUserHasBuff(user, skillId, buffCfg.minTimeout);
 				end
 			end
 		end
@@ -426,12 +432,8 @@ function IssBuff:rescheduleBuffs()
 			else
 				local minBuffEndTime = 4000000000; --4kkk lua doesn't have int.Max
 				for _,skillId in pairs(buffCfg.skillList) do
-					minBuffEndTime = math.min(minBuffEndTime, safeIndex(GetMe():GetBuff(skillId), "endTime") or 0);
-					if minBuffEndTime then
-						local party = GetPartyList()
-						for user in party.list do
-							minBuffEndTime = math.min(minBuffEndTime, safeIndex(user:GetBuff(skillId), "endTime") or 0);
-						end
+					for user in PartyWithMe() do
+						minBuffEndTime = math.min(minBuffEndTime, safeIndex(user:GetBuff(skillId), "endTime") or 0);
 					end
 				end
 				if minBuffEndTime > 0 then
