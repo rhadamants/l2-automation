@@ -1,6 +1,9 @@
 -- Just another script to give Iss Buff.
 -- uses the same algorithm as in IssBuff plugin
 
+CheckPartyBuff = true;
+PartyBuffBySchedule = true;
+
 BuffDebug = false
 OOPmode = false; -- should leave party after buff
 InviteMode = false; -- should invite character for buff
@@ -158,6 +161,7 @@ BuffsConfig = {
 		--skillList = Baff20min;
 	},
 	{
+		name = "poems",
 		lastUsed = 0,
 		useInterval = 30 * 60,
 		saveInterval = 2 * 60,
@@ -165,6 +169,7 @@ BuffsConfig = {
 		skillList = Baff20min;
 	},
 	{
+		name = "sonates",
 		lastUsed = 0,
 		useInterval = 5 * 60, -- in min
 		saveInterval = 1 * 60,
@@ -291,7 +296,7 @@ end
 function IssBuff:BuffPersonalByName(user)
 	local skillName = ClassesType[user:GetClass()]
 	local userClass = user:GetClass();
-	local skillName = userClass == 145 and self:DefineBuffBySummon(user:GetName()) or ClassesType[user:GetClass()];
+	local skillName = userClass == 145 and (self:DefineBuffBySummon(user:GetName()) or "Wizard") or ClassesType[user:GetClass()];
 	local skillId = BaffPersonal[skillName];
 	
 	if self:ValidateSkillUse(skillId, true, 4, 250) then
@@ -300,6 +305,7 @@ function IssBuff:BuffPersonalByName(user)
 		Sleep(700)
 		ClearTargets();
 		CancelTarget(false)
+		return true;
 	end
 end
 
@@ -326,7 +332,7 @@ end
 function IssBuff:IssBuff()
 	local wasProcessed = false;
 	for _, buffCfg in pairs(BuffsConfig) do
-		local timeSinceUse = os.time() - buffCfg.lastUsed;
+		local timeSinceUse = (GetTime() - buffCfg.lastUsed) / 1000;
 		if ( -- force use
 			(timeSinceUse > buffCfg.useInterval - 10) -- -10 is just a delay before all bufs disappear 
 			and (not buffCfg.isPersonal) -- just don't do personal buffs under mobs attack
@@ -345,9 +351,9 @@ function IssBuff:IssBuff()
 
 			wasProcessed = true;
 			if buffCfg.isPersonal and (self:MobsCount(150) == 0) and self:ProcessPersonalBuffs() then
-				buffCfg.lastUsed = os.time();
+				buffCfg.lastUsed = GetTime();
 			elseif self:CastAllByList(buffCfg.skillList, false, 4, 250) then
-				buffCfg.lastUsed = os.time();
+				buffCfg.lastUsed = GetTime();
 			else
 				self:eprint("Fail to buff")
 			end
@@ -360,18 +366,106 @@ function IssBuff:IsInParty()
 	return (GetPartyMaster() ~= nil);
 end
 
+-- we should not stuck on rebuffing some skill continuesly. So we save last use time per skill
+BuffRenewLastUsage = {
+	--[skillId] = lastUse
+}
+
+function IssBuff:ensureUserHasBuff(user, skillId, minTimeout)
+	if user:IsAlikeDeath() or user:GetDistance() > 1000 then
+		return; end
+
+	local buff = user:GetBuff(skillId);
+	if (not buff or buff.endTime - minTimeout*1000 < GetTime())
+		and (not BuffRenewLastUsage[skillId] or BuffRenewLastUsage[skillId] + 15*1000 < GetTime()) then
+		--self:printf("Buf endTime %s; os.time %s", buff.endTime, GetTime());
+		BuffRenewLastUsage[skillId] = GetTime();
+
+		if self:CastSkill(skillId, false, 4, 250) then
+			Sleep(700);
+		end
+	end
+end
+
+function IssBuff:checkPartyBuff()
+	for _, buffCfg in pairs(BuffsConfig) do
+		if buffCfg.isPersonal then
+			-- todo
+		else
+			for _,skillId in pairs(buffCfg.skillList) do
+				self:ensureUserHasBuff(GetMe(), skillId, buffCfg.minTimeout);
+				local party = GetPartyList()
+				if party:GetCount() > 0 then
+					for user in party.list do
+						self:ensureUserHasBuff(user, skillId, buffCfg.minTimeout);
+					end
+				end
+			end
+		end
+	end
+end
+
+function safeIndex(object, firstKey, ...)
+    if ("table" == type(object) or "userdata" == type(object)) and "nil" ~= type(firstKey) then
+        -- continue indexing
+        return safeIndex(object[firstKey], ...);
+    elseif not ("table" == type(object) or "userdata" == type(object)) and "nil" ~= type(firstKey) then
+        -- hit missed subkey
+        return nil;
+    else -- either no value or no index; both situations treated as successful
+        return object;
+    end
+end
+
+-- in case party members already have some buff we are trying to init buff schedule according to them
+function IssBuff:rescheduleBuffs()
+	if PartyBuffBySchedule then
+		for _, buffCfg in pairs(BuffsConfig) do
+			if buffCfg.isPersonal then
+				-- todo
+			else
+				local minBuffEndTime = 4000000000; --4kkk lua doesn't have int.Max
+				for _,skillId in pairs(buffCfg.skillList) do
+					minBuffEndTime = math.min(minBuffEndTime, safeIndex(GetMe():GetBuff(skillId), "endTime") or 0);
+					if minBuffEndTime then
+						local party = GetPartyList()
+						for user in party.list do
+							minBuffEndTime = math.min(minBuffEndTime, safeIndex(user:GetBuff(skillId), "endTime") or 0);
+						end
+					end
+				end
+				if minBuffEndTime > 0 then
+					buffCfg.lastUsed = minBuffEndTime - buffCfg.useInterval*1000
+					self:printf("%s valid for ~%s min", buffCfg.name, math.floor((minBuffEndTime - GetTime()) / 1000 / 60))
+				end
+			end
+		end
+	end
+end
+
 -- dofile(package.path .. "..\\..\\scripts\\lib\\RuntimeLogs.lua");
 -- RuntimeLogs:interceptByName("IssBuff")
 
+
+IssBuff:rescheduleBuffs()
+
 repeat
 	local self = IssBuff;
-    if not IsPaused()
-	and (InviteMode or (OOPmode and self:IsInParty()) or not OOPmode)
-	then
-		if self:IssBuff() and (OOPmode or InviteMode) then
-			LeaveParty();
-		end
+    if not IsPaused() then
+
+    	-- todo: validate party members buff level
+
+		if PartyBuffBySchedule and (InviteMode or (OOPmode and self:IsInParty()) or not OOPmode) then
+			if self:IssBuff() and (OOPmode or InviteMode) then
+				LeaveParty();
+			end
+	    end
+
+	    if CheckPartyBuff and self:IsInParty() then
+    		self:checkPartyBuff();
+    	end
     end
+
     Sleep(5000)
 until false
 
