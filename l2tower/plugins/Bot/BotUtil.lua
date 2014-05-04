@@ -1,3 +1,6 @@
+function printf(msg, ...)
+	ShowToClient("IssBuff",string.format(msg, ...));
+end
 
 function split(pString, pPattern)
    local Table = {}  -- NOTE: use {n = 0} in Lua-5.0
@@ -122,6 +125,22 @@ function ThreadSleepS(timeout)
 	return true;
 end
 
+function SelectTargetByOId2(oId)
+	ClearTargets();
+	CancelTarget(false)
+	if oId and oId > 0 then
+		if CurrentThread then
+			EventsBus:waitOnAction(
+				function () TargetRaw(oId); end
+				, "OnMyTargetSelected"
+				, function (target) return target:GetId() == oId end
+				, 1000);
+		else
+			TargetRaw(oId)
+		end
+	end
+	return true;
+end
 
 function SelectTargetByOId(oId)
 	ClearTargets();
@@ -146,9 +165,7 @@ function TalkByTarget(oId)
 	return true;
 end
 
-function CastSkill(id, count, timeout)
-	count = count or 0;
-	timeout = timeout or 1000;
+function ValidateSkillUse(id, waitReuse, count, timeout)
 	local skill = GetSkills():FindById(id)
 	if not skill then
 		log("Failed to cast skill (no skill):", id);
@@ -163,18 +180,31 @@ function CastSkill(id, count, timeout)
 		log("Failed to cast skill (can't be used):", id);
 		return false; end
 
-	UseSkillRaw(id,false,false)
+	return true;
+end
+
+function CastSkill(id, count, timeout, waitReuse)
+	if not ValidateSkillUse(id, waitReuse, count, timeout) then
+		return false;
+	end
+
+	return CastSkillRaw(id, count, timeout);
+end
+
+function CastSkillRaw(id, count, timeout)
 	local myId = GetMe():GetId();
 
-	local res = EventsBus:waitOn("OnMagicSkillLaunched", function (user, target, skillId, skillLvl)
-		return myId == user:GetId() and id == skillId;
-	end, timeout)
+	local res = EventsBus:waitOnAction(
+		function () UseSkillRaw(id,false,false); end
+		, "OnMagicSkillLaunched"
+		, function (user, target, skillId, skillLvl) return myId == user:GetId() and id == skillId; end
+		, timeout);
+
 	if res then 
 		return true;
 	elseif count > 0 then
-		return CastSkill(id, (count - 1), timeout)
+		return CastSkillRaw(id, (count - 1), timeout)
 	end
-
 	log("Failed to cast skill (some error):", id);
 	return false;
 end
@@ -188,6 +218,7 @@ function CastAllByList(list, count, timeout)
 			return false;
 		end
 	end
+	return true;
 end
 
 function MobsCount(range)
@@ -199,4 +230,29 @@ function MobsCount(range)
 		 end
 	end
 	return i
+end
+
+function safeIndex(object, firstKey, ...)
+    if ("table" == type(object) or "userdata" == type(object)) and "nil" ~= type(firstKey) then
+        -- continue indexing
+        return safeIndex(object[firstKey], ...);
+    elseif not ("table" == type(object) or "userdata" == type(object)) and "nil" ~= type(firstKey) then
+        -- hit missed subkey
+        return nil;
+    else -- either no value or no index; both situations treated as successful
+        return object;
+    end
+end
+
+function PartyWithMe()
+	local partyTable = {GetMe()};
+	local party = GetPartyList()
+	for user in party.list do
+		table.insert(partyTable, user)
+	end
+	local i, user;
+	return function ()
+		i, user = next(partyTable, i)
+		return user;
+	end
 end
