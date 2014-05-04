@@ -93,6 +93,25 @@ function EventsBus:removeCallback(eventName, waiterHandle)
 	end
 end
 
+-- TODO: refactor this function. Combine waitOnAction() with waitOn()
+function EventsBus:waitOnAction(action, eventName, continueCondition, timeout)
+	if "function" ~= type(action) then
+		eprint("EventsBus:waitOnAction -> action is " .. type(action))
+		return; end
+	if not (self.events[eventName] and "table" == type(CurrentThread)) then
+		eprint("error: waitOn invalid waiter on:" .. tostring(eventName) .. " in thread:" .. type(CurrentThread))
+		return; end
+
+	table.insert(self.events[eventName], 
+		{ -- var WaiterHandle
+			waiter = CurrentThread,
+			continueCondition=continueCondition,
+			timeoutAt = timeout and GetTime() + timeout or nil,
+		});
+	action();
+	return coroutine.yield(true);
+end
+
 --- this function will pause CurrentThread until specific event happen or timeout
 function EventsBus:waitOn(eventName, continueCondition, timeout)
 	if not (self.events[eventName] and "table" == type(CurrentThread)) then

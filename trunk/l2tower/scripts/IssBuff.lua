@@ -159,7 +159,7 @@ BuffsConfig = {
 		saveInterval = 2 * 60,
 		minTimeout = 1 * 60,
 		isPersonal = true,
-		--skillList = Baff20min;
+		skillList = BaffPersonal;
 	},
 	{
 		name = "poems",
@@ -229,7 +229,7 @@ end
 function IssBuff:CastAllByList(list, waitReuse, count, timeout)
 	if "table" ~= type(list) then return self:dprint("CastAllByList(list) - >> list not a table") end
 	SetPause(true)
-	CancelTarget(false)
+	-- CancelTarget(false)
 	local res = true;
 	for _, id in pairs(list) do
 		if not self:CastSkill(id, waitReuse, count, timeout) then
@@ -327,6 +327,9 @@ function IssBuff:BuffPersonalByName(user)
 end
 
 function IssBuff:ProcessPersonalBuffs()
+	local target = GetTarget()
+	local targetId = target and target:GetId() or nil;
+
 	for user in PartyWithMe() do
 		if not user:IsAlikeDeath() and user:GetDistance() < 1000 then
 			if not self:BuffPersonalByName(user) then
@@ -336,6 +339,12 @@ function IssBuff:ProcessPersonalBuffs()
 			self:printf("Fail to buff user %s (dead %s, dist %s)", user:GetName(), user:IsAlikeDeath(), user:GetDistance());
 		end
 	end
+
+	-- once buffs are finished target last target
+	if targetId then
+		Target(targetId)
+	end
+
 	return true;
 end
 
@@ -381,18 +390,34 @@ BuffRenewLastUsage = {
 	--[skillId] = lastUse
 }
 
-function IssBuff:ensureUserHasBuff(user, skillId, minTimeout)
+function IssBuff:ensureUserHasBuff(user, skillId, minTimeout, byUser)
 	if user:IsAlikeDeath() or user:GetDistance() > 1000 then
 		return; end
 
 	local buff = user:GetBuff(skillId);
-	if (not buff or buff.endTime - minTimeout*1000 < GetTime())
-		and (not BuffRenewLastUsage[skillId] or BuffRenewLastUsage[skillId] + 15*1000 < GetTime()) then
+	local buffTimeElapsed = (not buff or buff.endTime - minTimeout*1000 < GetTime());
+	if buffTimeElapsed
+		and (not byUser 
+			and (not BuffRenewLastUsage[skillId] or BuffRenewLastUsage[skillId] + 15*1000 < GetTime())
+			or ( byUser and (not BuffRenewLastUsage[user:GetId()] or BuffRenewLastUsage[user:GetId()] + 15*1000 < GetTime())))
+	then
 		--self:printf("Buf endTime %s; os.time %s", buff.endTime, GetTime());
-		BuffRenewLastUsage[skillId] = GetTime();
+		BuffRenewLastUsage[byUser and user:GetId() or skillId] = GetTime();
+
+		-- in case of personal buffs we need to retarget last target after cast
+		local targetId;
+		if byUser then
+			local target = GetTarget()
+			targetId = target and target:GetId() or nil;
+			Target(user:GetId())
+		end
 
 		if self:CastSkill(skillId, false, 4, 250) then
 			Sleep(700);
+		end
+
+		if targetId ~= nil then
+			Target(targetId)
 		end
 	end
 end
@@ -400,7 +425,15 @@ end
 function IssBuff:checkPartyBuff()
 	for _, buffCfg in pairs(BuffsConfig) do
 		if buffCfg.isPersonal then
-			-- we often need to buff some special buffs to party members
+			for user in PartyWithMe() do
+				local userHarmony;
+				for _,skillId in pairs(buffCfg.skillList) do
+					if user:GotBuff(skillId) then
+						userHarmony = skillId;
+					end
+				end
+				self:ensureUserHasBuff(user, userHarmony or self:getHarmonyForUser(user), buffCfg.minTimeout, true);
+			end
 		else
 			for _,skillId in pairs(buffCfg.skillList) do
 				for user in PartyWithMe() do
@@ -425,22 +458,30 @@ end
 
 -- in case party members already have some buff we are trying to init buff schedule according to them
 function IssBuff:rescheduleBuffs()
-	if PartyBuffBySchedule then
-		for _, buffCfg in pairs(BuffsConfig) do
-			if buffCfg.isPersonal then
-				-- todo
-			else
-				local minBuffEndTime = 4000000000; --4kkk lua doesn't have int.Max
+	if not PartyBuffBySchedule then
+		return; end
+	
+	-- searching for minimal buff endTime in each category of buffs on all party members
+	for _, buffCfg in pairs(BuffsConfig) do
+		local minBuffEndTime = 4000000000; --4kkk lua doesn't have int.Max
+		if buffCfg.isPersonal then
+			for user in PartyWithMe() do
+				local activeHarmonyEndTime = 0;
 				for _,skillId in pairs(buffCfg.skillList) do
-					for user in PartyWithMe() do
-						minBuffEndTime = math.min(minBuffEndTime, safeIndex(user:GetBuff(skillId), "endTime") or 0);
-					end
+					activeHarmonyEndTime = math.max(activeHarmonyEndTime, safeIndex(user:GetBuff(skillId), "endTime") or 0);
 				end
-				if minBuffEndTime > 0 then
-					buffCfg.lastUsed = minBuffEndTime - buffCfg.useInterval*1000
-					self:printf("%s valid for ~%s min", buffCfg.name, math.floor((minBuffEndTime - GetTime()) / 1000 / 60))
+				minBuffEndTime = math.min(minBuffEndTime, activeHarmonyEndTime);
+			end
+		else
+			for _,skillId in pairs(buffCfg.skillList) do
+				for user in PartyWithMe() do
+					minBuffEndTime = math.min(minBuffEndTime, safeIndex(user:GetBuff(skillId), "endTime") or 0);
 				end
 			end
+		end
+		if minBuffEndTime > 0 then
+			buffCfg.lastUsed = minBuffEndTime - buffCfg.useInterval*1000
+			self:printf("%s valid for ~%s min", buffCfg.name, math.floor((minBuffEndTime - GetTime()) / 1000 / 60))
 		end
 	end
 end
