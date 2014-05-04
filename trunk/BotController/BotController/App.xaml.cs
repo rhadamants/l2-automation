@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Forms;
 using BotController.Core;
 using BotController.Managers;
@@ -19,14 +20,20 @@ namespace BotController
   {
     public App()
     {
-      var listenerThread = new Thread(Server.StartListening) { IsBackground = true };
-      listenerThread.Start();
+      Server.Start();
 
       UserManager.Init();
+
+      Exit += OnExit;
 
 //      var keyHook = new GlobalKeyboardHook();
 //      keyHook.KeyPressed += keyHook_KeyPressed;
 //      keyHook.HookedKeys.Add(Keys.NumPad0);
+    }
+
+    private void OnExit(object sender, ExitEventArgs exitEventArgs)
+    {
+      Server.Stop();
     }
 
     void keyHook_KeyPressed(object sender, KeyPressedEventArgs e)

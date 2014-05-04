@@ -53,11 +53,15 @@ namespace BotController.Managers
           case "followersDialogAction":
             NavigationManager.MethodFollowersDialogAction(msgJson["d"] as JObject);
             break;
+
+          case "syncUserPath":
+            NavigationManager.MethodSyncuserPath(msgJson["d"] as JObject);
+            break;
         }
       }
       catch (Exception e)
       {
-        Console.WriteLine("Error in clientMessage {0}", e);
+        Log.Info("Error in clientMessage {0}", e);
       }
     }
 

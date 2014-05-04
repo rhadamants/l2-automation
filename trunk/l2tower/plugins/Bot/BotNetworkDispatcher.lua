@@ -7,11 +7,7 @@ BotNetworkDispatcher = {
 }
 
 function BotNetworkDispatcher:start()
-	self:sendMessage(self:getLoginMessage());
-	--self.thread = coroutine.create(function () self:networkDispatcherThreadProc() end)
-	--RunThread(self.thread);
 	CreateThread(self, self.networkDispatcherThreadProc, self.dispose)
-	--return self.thread;
 end
 
 function BotNetworkDispatcher:sendMessage(msg)
@@ -25,6 +21,11 @@ function BotNetworkDispatcher:sendMessage(msg)
 	table.insert(self.messagesToSend, msg)
 end
 
+function BotNetworkDispatcher:resetMessageQueue()
+	self.messagesToSend = {};
+	self:sendMessage(self:getLoginMessage());
+end
+
 function SendServerMessage(serverMethod, data)
 	BotNetworkDispatcher:sendMessage({
 		m = serverMethod,
@@ -33,38 +34,42 @@ function SendServerMessage(serverMethod, data)
 end
 
 function BotNetworkDispatcher:networkDispatcherThreadProc()
-	-- TODO: find a way to reconnect
-	-- local lastAttempt = 0;
-	-- while EventsBus:waitOn("OnLTick1s") do
-	-- 	if os.time() - lastAttempt > 10 then
-	-- 		lastAttempt = os.time();
-	-- 		--log(pcall(function()self:handleConnection()end))
-	-- 	end
-	-- end
-	self:handleConnection()
+	if SERVER_RECONNECT then
+		local timeDiv = 15;
+		while EventsBus:waitOn("OnLTick1s") do
+			timeDiv = timeDiv + 1;
+			if timeDiv > 14 then
+				timeDiv = 0;
+				log("reconnect")
+				self:handleConnection();
+			end
+		end
+	else
+		self:handleConnection();
+	end
 end
 
 function BotNetworkDispatcher:handleConnection()
-	local c = assert(socket.connect("192.168.0.5", 8888))
-	self.connection = c;
-	c:settimeout(0)   -- do not block
-	while EventsBus:waitOn("OnLTick") do
-		local r, w = socket.select({c}, {c}, 0)
-		if r then
-			local s, status = c:receive("*l")
-			if (s) then
-				log("process command: ", s)
-				--BotCommandController:processCommand(s)
-				BotCommandFactory:runCommand(s)
-			end
+	local c = socket.tcp();
+	c:settimeout(1/1000);
+	if 1 ~= c:connect(SERVER_ADDRESS, 8888) then
+		return;	end
 
-			if status == "closed" then 
-				log("connection was closed")
-				break; -- todo reconnect
-			end
+	self:resetMessageQueue();
+	self.connection = c;
+	while EventsBus:waitOn("OnLTick") do
+		local s, status = c:receive("*l")
+		if (s) then
+			log("process command: ", s)
+			BotCommandFactory:runCommand(s)
 		end
+		if status == "closed" or status == "Socket is not connected" then 
+			log("connection was closed")
+			break;
+		end
+
 		local messagesToSend = BotNetworkDispatcher.messagesToSend;
-		if w and #messagesToSend > 0 then
+		if #messagesToSend > 0 then
 			for _,message in ipairs(messagesToSend) do
 				c:send(message.."\n\r")
 			end
@@ -75,8 +80,10 @@ end
 
 -- called when this thread is going to be removed
 function BotNetworkDispatcher:dispose()
-	self.connection:close();
-	self.connection = nil;
+	if self.connection then
+		self.connection:close();
+		self.connection = nil;
+	end
 end
 
 function BotNetworkDispatcher:getLoginMessage()

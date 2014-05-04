@@ -27,6 +27,22 @@ namespace BotController
     private static int _clientIdCounter;
 
     private static readonly ManualResetEvent _allDone = new ManualResetEvent(false);
+    private static Thread _listenerThread;
+
+    public static void Start()
+    {
+      _listenerThread = new Thread(StartListening) { IsBackground = true };
+      _listenerThread.Start();
+    }
+
+    public static void Stop()
+    {
+      _listenerThread.Abort();
+      foreach (var handle in Clients.Values)
+      {
+        handle.WorkSocket.Disconnect(false);
+      }
+    }
 
     public static void StartListening()
     {
@@ -34,7 +50,11 @@ namespace BotController
 
       try
       {
+#if DEBUG
           socket.Bind(new IPEndPoint(IPAddress.Any, 8888));
+#else
+        socket.Bind(new IPEndPoint(IPAddress.Any, 8887));
+#endif
           socket.Listen(10);           
 
           while (true)
@@ -144,6 +164,7 @@ namespace BotController
       {
           UserConnectionHandle userConnectionState;
           Clients.TryRemove(userHandleId, out userConnectionState);
+          handle.WorkSocket.Disconnect(false);
           ServerManager.ClientDisconnected(userHandleId);
       }
   }

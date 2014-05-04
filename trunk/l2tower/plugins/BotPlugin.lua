@@ -1,7 +1,8 @@
 -- Loader of a plugin environment.
 -- as far as we want to build a logic over multiple plugins we need to have all of them executed under one Lua environment.
 -- so here we initialize all the stuff
---SERVER_ADDRESS = "127.0.0.1"
+SERVER_ADDRESS = "192.168.0.5"
+SERVER_RECONNECT = true;
 
 --if true then return; end
 
