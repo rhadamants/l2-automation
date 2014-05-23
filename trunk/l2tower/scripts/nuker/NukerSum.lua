@@ -21,6 +21,7 @@ SummonBSSLimit = 0; -- 0 to disable
 ManaRechargeSkill = 11269; -- Разделение Маны
 SelfBuffSkill = 11288; -- Последнее Разделение Судьбы
 SkillId_Cube = 11268; -- Вызвать Карающий Куб
+SkillId_Aura = 1937; -- Аура Веньо
 AttackNewTargetDelay = 100; --ms
 
 ItemId_CryR = 17371;
@@ -152,10 +153,17 @@ repeat
     	-- mp recharge
         if Sum_UseManaRecharge and me:GetMp() > 1400 and GetPartyList():GetCount() > 2 and GetPartyMinMpPercent() < 90 and not me:IsBlocked(true) then
 			CastSkill(ManaRechargeSkill);
+			Sleep(700)
 		end
 		-- self buff
 		if not me:GotBuff(SelfBuffSkill) then
 			CastSkill(SelfBuffSkill);
+			Sleep(700)
+		end
+		-- aura
+		if not me:GotBuff(SkillId_Aura) then
+			CastSkill(SkillId_Aura);
+			Sleep(700)
 		end
 		-- nuke
 		if Sum_UseNuke then

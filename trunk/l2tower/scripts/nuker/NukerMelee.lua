@@ -6,10 +6,13 @@ CharSkills = {
 	[139] = { -- Sigel Knight
 		cube = 10043, -- Призыв Куба Рыцаря
 		jumpSkill = 10015,
+		auraSkill = 1927, -- Аура Сигеля
 		massAttackSkills = {10013, 10014},
 		singleAttackSkills = {10008, 10011, 10009},--10011, 10008, 10010},
 	};
 	[141] = { -- Othell Rogue
+		auraSkill = 1931, -- Аура Одала
+		selfBuffSkills = {10525},
 		singleAttackSkills = {
 			10509, -- Разбивание Сердца
 			10508, -- Кровавый Шаг
@@ -23,9 +26,11 @@ CharSkills = {
 	},
 	[140] = { -- Tyrr Warrior
 		jumpSkill = 10267,
+		auraSkill = 1929, -- Аура Тира
 		selfBuffSkills = {
-			10292, -- 10270	Последняя Энергия
+			10292, 
 			10297, -- Дух Убийцы
+			10270, -- Последняя Энергия
 
 		},
 		massAttackSkills = {
@@ -94,6 +99,7 @@ function Init()
 	SingleAttackSkills = charCfg.singleAttackSkills
 	SelfBuffSkills = charCfg.selfBuffSkills;
 	SummonCubeSkill = charCfg.cube;
+	AuraSkill = charCfg.auraSkill;
 end
 
 Init()
@@ -102,6 +108,11 @@ repeat
     if not IsPaused() then
     	ProcessSelfBuffs();
 		SumCube();
+		-- aura
+		if AuraSkill and not GetMe():GotBuff(AuraSkill) then
+			CastSkill(AuraSkill);
+			Sleep(700)
+		end
 
 		local target = GetTarget()
         if  --GetMe():GetMp() > 200 and 
