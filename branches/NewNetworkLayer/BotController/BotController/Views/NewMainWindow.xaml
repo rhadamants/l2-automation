@@ -1,0 +1,186 @@
+﻿<Window x:Class="BotController.Views.NewMainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:viewModel="clr-namespace:BotController.ViewModel"
+        xmlns:model="clr-namespace:BotController.Model"
+        Title="NewMainWindow" Height="300" Width="600"
+        DataContext="{DynamicResource NewMainViewModel}"
+        x:Name="Root">
+  <Window.Resources>
+    <viewModel:NewMainViewModel x:Key="NewMainViewModel"/>
+    <DataTemplate x:Key="SimpleUserView">
+      <ListBoxItem IsHitTestVisible="False">
+        <TextBlock Margin="8,4">
+          <Run Text="{Binding Name}"/>
+          (<Run Text="{Binding Role}"/>)
+        </TextBlock>
+      </ListBoxItem>
+    </DataTemplate>
+    
+    <!-- USER VIEW -->
+    <DataTemplate x:Key="UserView" DataType="{x:Type model:User}">
+      <ListBoxItem HorizontalAlignment="Stretch">
+        <Border BorderBrush="Black" BorderThickness="1" >
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Orientation="Horizontal" Margin="8,4"  Grid.Row="0" Grid.ColumnSpan="3">
+              <TextBlock><Run Text="{Binding Name}"/> (<Run Text="{Binding Role}"/>)</TextBlock>
+              <CheckBox IsChecked="{Binding Config.IsHuman, Mode=TwoWay}" Content="Is human"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,0">
+              <StackPanel Orientation="Horizontal" Margin="0,4">
+                <TextBlock Text="Follow:"/>
+                <ComboBox ItemsSource="{Binding ElementName=Root, Path=DataContext.Users}" Text="{Binding Config.UserToFollow}" SelectedItem="{Binding Config.UserToFollow, Mode=TwoWay}"/>
+                <Button Content="Start" Command="{Binding ElementName=Root, Path=DataContext.StartFollowCommand}" CommandParameter="{Binding}"/>
+                <Button Content="Stop" Command="{Binding ElementName=Root, Path=DataContext.StopFollowCommand}" CommandParameter="{Binding}"/>
+              </StackPanel>
+              
+              
+              <StackPanel Orientation="Horizontal" Margin="0,4">
+                <TextBlock Text="Pickup:"/>
+                <CheckBox IsChecked="{Binding Config.PickupDump}"/>
+                <Button Content="Dump" Command="{Binding ElementName=Root, Path=DataContext.TogglePickupDumpCommand}" CommandParameter="{Binding}"/>
+                <CheckBox IsChecked="{Binding Config.IsPickupMaster}"/>
+                <Button Content="IsMaster" Command="{Binding ElementName=Root, Path=DataContext.ToggleIsPickupMasterCommand}" CommandParameter="{Binding}"/>
+              </StackPanel>
+
+              <StackPanel Orientation="Horizontal" Margin="0,4">
+                <TextBlock Text="Assist:"/>
+                <ComboBox ItemsSource="{Binding ElementName=Root, Path=DataContext.Users}" Text="{Binding Config.AssistMaster}" SelectedItem="{Binding Config.AssistMaster, Mode=TwoWay}"/>
+                <Button Content="Start" Command="{Binding ElementName=Root, Path=DataContext.StartAssistCommand}" CommandParameter="{Binding}"/>
+                <Button Content="Stop" Command="{Binding ElementName=Root, Path=DataContext.StopAssistCommand}" CommandParameter="{Binding}"/>
+              </StackPanel>
+            </StackPanel>
+            
+            <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,8,0">
+              
+            </StackPanel>
+
+            <!--ISS BUFF-->
+            <StackPanel Grid.Row="1" Grid.Column="2"
+                        Visibility="{Binding Role, Converter={StaticResource FlagsEnumVisibilityConverter}, ConverterParameter={x:Static model:UserRoles.Iss}}">
+              <CheckBox x:Name="BuffConfigShown" Content="Buff config"/>
+              <Border BorderBrush="Black" BorderThickness="1" 
+                      Visibility="{Binding ElementName=BuffConfigShown, Path=IsChecked, Converter={StaticResource ValueToVisibilityConverter}}">
+                <Grid Margin="12,8">
+                  <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                  </Grid.RowDefinitions>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                  </Grid.ColumnDefinitions>
+                  <CheckBox Grid.Row="0" IsChecked="{Binding Config.IsOopMode}" Content="OopMode"/>
+                  <CheckBox Grid.Row="1" IsChecked="{Binding Config.IsInviteMode}" Content="InviteMode"/>
+                  <TextBlock Grid.Row="2" Text="InviteName: "/>
+                  <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Config.InviteName}"/>
+                  <CheckBox Grid.Row="3" IsChecked="{Binding Config.IsRequestParty}" Content="RequestMode"/>
+                  <TextBlock Grid.Row="4" Text="RequestName: "/>
+                  <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Config.RequestPartyName}"/>
+                </Grid>
+              </Border>
+            </StackPanel>
+            
+          </Grid>
+        </Border>
+      </ListBoxItem>
+    </DataTemplate>
+  </Window.Resources>
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="1*" />
+      <ColumnDefinition Width="Auto"/>
+      <ColumnDefinition Width="2*"/>
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <DockPanel Grid.ColumnSpan="3">
+      <Menu DockPanel.Dock="Top">
+        <MenuItem Header="_Refresh" Command="{Binding RefreshUsersCommand}"/>
+      </Menu>
+      <StackPanel></StackPanel>
+    </DockPanel>
+
+    <!-- COLUMN 1 -->
+    <StackPanel Grid.Row="1">
+      <!--Global Controls-->
+      <Border BorderBrush="Black" BorderThickness="1" >
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Text="IssBuff: " Margin="4,12"/>
+          <Button Content="Start" Command="{Binding StartWatchBuffCommand}" CommandParameter="{Binding ElementName=BufferSelector, Path=SelectedItem}" Margin="0,8"/>
+          <Button Content="Stop" Command="{Binding StopWatchBuffCommand}" CommandParameter="{Binding ElementName=BufferSelector, Path=SelectedItem}" Margin="0,8"/>
+          <Button Content="Pause" Command="{Binding PauseWatchBuffCommand}" CommandParameter="{Binding ElementName=BufferSelector, Path=SelectedItem}" Margin="0,8"/>
+          <ComboBox x:Name="BufferSelector" ItemsSource="{Binding BuffersList}" SelectedItem="{Binding SelectedBuffer, Mode=TwoWay}"  Margin="0,8"/>
+        </StackPanel>
+      </Border>
+      <CheckBox Content="Auto ressurrect" IsChecked="{Binding AutoRessurrect, Mode=TwoWay}" Margin="4"/>
+      <!--RESURRECT-->
+      <Border BorderBrush="Black" BorderThickness="1" Visibility="{Binding HasDeadUsers, Converter={StaticResource ValueToVisibilityConverter}}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+          </Grid.ColumnDefinitions>
+          <ListBox x:Name="DeadUsersList" ItemsSource="{Binding DeadUsers}" ItemTemplate="{StaticResource SimpleUserView}"
+                   SelectedItem="{Binding SelectedDeadUser}"
+                             Height="115" TargetUpdated="DeadUsersList_OnTargetUpdated"/>
+          <Button Grid.Column="1" Content="Resurrect" Command="{Binding ResUserCommand}" CommandParameter="{Binding ElementName=DeadUsersList, Path=SelectedItem}"/>
+        </Grid>
+      </Border>
+      
+      <StackPanel Orientation="Horizontal">
+        <Button Content="Create party" Margin="10,8"
+                Command="{Binding CreatePartyCommand}" CommandParameter="{Binding ElementName=PartyLeaderSelector, Path=SelectedItem}"/>
+        <ComboBox x:Name="PartyLeaderSelector" ItemsSource="{Binding Users}" Margin="0,8"/>
+      </StackPanel>
+
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,4">
+        <Button Content="Start all" Margin="10,0,2,0" Command="{Binding SetBotStateCommand}" CommandParameter="True"/>
+        <Button Content="Stop all" Margin="2,0,10,0" Command="{Binding SetBotStateCommand}"/>
+      </StackPanel>
+      
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4">
+        <Button Content="Start follow all" Margin="10,0,2,0" Command="{Binding StartFollowAllCommand}"/>
+        <Button Content="Stop follow all" Margin="2,0,10,0" Command="{Binding StopFollowAllCommand}"/>
+      </StackPanel>
+
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4">
+        <Button Content="Start assist all" Margin="10,0,2,0" Command="{Binding StartAssistAllCommand}"/>
+        <Button Content="Stop assist all" Margin="2,0,10,0" Command="{Binding StopAssistAllCommand}"/>
+      </StackPanel>
+
+      <Button Content="Open log" VerticalAlignment="Bottom" Click="OpenLog_OnClick" Margin="0,8,0,4"/>
+      <Button Content="Open old window" VerticalAlignment="Bottom" Click="OpenOldWindow_OnClick" Margin="0,4"/>
+    </StackPanel>
+
+    <!-- COLUMN 2 -->
+    <GridSplitter HorizontalAlignment="Right" 
+                  VerticalAlignment="Stretch" 
+                  Grid.Column="1" Grid.Row="1" ResizeBehavior="PreviousAndNext"
+                  Width="5" Background="#FFBCBCBC"/>
+    
+    <!-- COLUMN 3 -->
+    <ListBox Grid.Column="2" Grid.Row="1" ItemTemplate="{StaticResource UserView}" ItemsSource="{Binding Users}"
+             HorizontalContentAlignment="Stretch"
+             HorizontalAlignment="Stretch">
+      
+    </ListBox>
+  </Grid>
+</Window>

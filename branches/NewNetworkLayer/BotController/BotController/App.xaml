@@ -1,0 +1,16 @@
+<Application x:Class="BotController.App" 
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+             StartupUri="Views\NewMainWindow.xaml" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             d1p1:Ignorable="d" 
+             xmlns:d1p1="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:converters="clr-namespace:BotController.Views.Converters">
+  <Application.Resources>
+    <vm:ViewModelLocator x:Key="Locator" d:IsDataSource="True" xmlns:vm="clr-namespace:BotController.ViewModel" />
+        <converters:ValueToVisibilityConverter x:Key="ValueToVisibilityConverter"/>
+    <converters:EnumMatchToBooleanConverter x:Key="EnumMatchConverter" />
+    <converters:FlagsEnumValueConverter x:Key="FlagsEnumValueConverter" />
+    <converters:FlagsEnumVisibilityConverter x:Key="FlagsEnumVisibilityConverter" />
+  </Application.Resources>
+</Application>

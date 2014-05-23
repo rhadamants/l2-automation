@@ -1,0 +1,128 @@
+﻿<Window x:Class="BotController.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:vm="clr-namespace:BotController.ViewModel"
+        xmlns:converters="clr-namespace:BotController.Views.Converters"
+        Title="MainWindow" Height="350" Width="525"
+        DataContext="{DynamicResource MainViewModel}">
+  <Window.Resources>
+    <vm:MainViewModel x:Key="MainViewModel"/>
+    <DataTemplate x:Key="DataTemplate1">
+      <ListBoxItem IsHitTestVisible="False">
+        <TextBlock Margin="8,4">
+          <Run Text="{Binding Name}"/>
+          (<Run Text="{Binding Role}"/>)
+        </TextBlock>
+      </ListBoxItem>
+    </DataTemplate>
+  </Window.Resources>
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="150"/>
+      <ColumnDefinition Width="*"/>
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition/>
+    </Grid.RowDefinitions>
+    <Button Content="Refresh" Command="{Binding RefreshUsersCommand}"/>
+    
+    <ListBox x:Name="UsersList" Grid.Row="1"
+             ItemsSource="{Binding Users}" ItemTemplate="{StaticResource DataTemplate1}" SelectedItem="{Binding SelectedUser}"/>
+
+    <ScrollViewer Grid.Column="1" Grid.RowSpan="2">
+    <StackPanel >
+
+      <!--Global Controls-->
+      <StackPanel Grid.Row="2" Orientation="Horizontal">
+        <TextBlock Text="IssBuff: " Margin="12,12"/>
+        <Button Content="Start" Command="{Binding StartWatchBuffCommand}" Margin="10,8"/>
+        <Button Content="Stop" Command="{Binding StopWatchBuffCommand}" Margin="10,8"/>
+        <Button Content="Pause" Command="{Binding PauseWatchBuffCommand}" Margin="10,8"/>
+      </StackPanel>
+
+      <Button Content="Create party" Margin="10,8"
+              Command="{Binding CreatePartyCommand}" CommandParameter="{Binding ElementName=UsersList, Path=SelectedItem}"/>
+      
+      <!--RESURRECT-->
+      <Border BorderBrush="Black" BorderThickness="1" Visibility="{Binding HasDeadUsers, Converter={StaticResource ValueToVisibilityConverter}}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+          </Grid.ColumnDefinitions>
+          <ListBox x:Name="DeadUsersList" ItemsSource="{Binding DeadUsers}" ItemTemplate="{StaticResource DataTemplate1}"
+                   SelectedItem="{Binding SelectedDeadUser}"
+                             Height="115" TargetUpdated="DeadUsersList_OnTargetUpdated"/>
+          <Button Grid.Column="1" Content="Resurrect" Command="{Binding ResUserCommand}" CommandParameter="{Binding ElementName=DeadUsersList, Path=SelectedItem}"/>
+        </Grid>
+      </Border>
+
+      <!--CHAT-->
+      <CheckBox x:Name="ChatBanListShown" Content="Chat ban" Margin="12,8"/>
+      <Border BorderBrush="Black" BorderThickness="1" Visibility="{Binding ElementName=ChatBanListShown, Path=IsChecked, Converter={StaticResource ValueToVisibilityConverter}}">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+          </Grid.ColumnDefinitions>
+          <ListBox x:Name="ChatMsgersList" ItemsSource="{Binding Messangers}"
+                             Height="100" />
+          <Button Grid.Column="1" Content="Block user" Command="{Binding BlockChatUserCommand}" CommandParameter="{Binding ElementName=ChatMsgersList, Path=SelectedItem}"/>
+        </Grid>
+      </Border>
+
+      <!--ISS BUFF-->
+      <Border BorderBrush="Black" BorderThickness="1"
+              Visibility="{Binding IsSelectedIss, Converter={StaticResource ValueToVisibilityConverter}}">
+        <Grid Margin="12,8">
+          <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+          </Grid.ColumnDefinitions>
+          <CheckBox Grid.Row="0" IsChecked="{Binding IsOopMode}" Content="OopMode"/>
+          <CheckBox Grid.Row="1" IsChecked="{Binding IsInviteMode}" Content="InviteMode"/>
+          <TextBlock Grid.Row="2" Text="InviteName: "/>
+          <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding InviteName}"/>
+          <CheckBox Grid.Row="3" IsChecked="{Binding IsRequestParty}" Content="RequestMode"/>
+          <TextBlock Grid.Row="4" Text="RequestName: "/>
+          <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding RequestPartyName}"/>
+        </Grid>
+      </Border>
+
+      <!--DEV STUFF-->
+      <CheckBox x:Name="DevStuffShown" Content="DevStuff" Margin="12,8" IsChecked="True"/>
+      <Border BorderBrush="Black" BorderThickness="1" Visibility="{Binding ElementName=DevStuffShown, Path=IsChecked, Converter={StaticResource ValueToVisibilityConverter}}">
+        <StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="FollowPosition:"/>
+            <RadioButton GroupName="FollowPosition" Content="1" Margin="8,0" 
+                         IsChecked="{Binding Path=FollowPosition, Mode=TwoWay, Converter={StaticResource EnumMatchConverter}, 
+                                     ConverterParameter=Pos1}"/>
+            <RadioButton GroupName="FollowPosition" Content="2" Margin="8,0"
+                         IsChecked="{Binding Path=FollowPosition, Mode=TwoWay, Converter={StaticResource EnumMatchConverter}, 
+                                     ConverterParameter=Pos2}"/>
+            <RadioButton GroupName="FollowPosition" Content="3" Margin="8,0"
+                         IsChecked="{Binding Path=FollowPosition, Mode=TwoWay, Converter={StaticResource EnumMatchConverter}, 
+                                     ConverterParameter=Pos3}"/>
+          </StackPanel>
+          <Button Content="Start follow" Margin="10,8"
+                  Command="{Binding StartFollowCommand}" CommandParameter="{Binding ElementName=UsersList, Path=SelectedItem}"/>
+          <Button Content="Stop follow" Margin="10,8"
+                  Command="{Binding StopFollowCommand}"/>
+
+          <Button Content="Open new window" Margin="10,8" Click="OpenNewWindow_OnClick"/>
+        </StackPanel>
+      </Border>
+
+
+    </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</Window>
