@@ -8,7 +8,12 @@ BuffDebug = false
 --AttackNewTargetDelay = 100;--ms
 
 Debuff = 10801;
-
+SkillId_Aura = 1933; -- Аура Эура
+Stances = { -- first one is preferred to use in case user will not trigger another one
+	10759, -- Стойка Снайпера
+	10758, -- Стойка Беглого Огня
+	10757, -- Осадная Огневая Стойка
+}
 RangeAttackSkills = {
 			10762, -- Скоростной Выстрел
 			10763, -- Точечный Удар
@@ -44,21 +49,33 @@ function Nuke(target)
 	end
 end
 
+function CheckStance(me)
+	for _,skillId_stance in pairs(Stances) do
+		if me:GotBuff(skillId_stance) then
+			return;
+		end
+	end
+	Sleep(500)
+	CastSkill(Stances[1]);
+	--dprint("going to cast skill %s", Stances[1])
+	Sleep(1000)
+end
 
 repeat
     if not IsPaused() then
-		local target = GetTarget()
-		if not OldTarget or (OldTarget and target and OldTarget:GetId() ~= target:GetId()) then
-			OldTarget = target;
-			RangedAttackCounter = 0;
-			if AttackNewTargetDelay and AttackNewTargetDelay > 0 then
-				Sleep(AttackNewTargetDelay);
-				target = GetTarget();
-			end
+		local target = GetTarget();
+		local me = GetMe();
+
+		-- aura
+		if SkillId_Aura and not GetMe():GotBuff(SkillId_Aura) then
+			CastSkill(SkillId_Aura);
+			Sleep(500)
 		end
+
+		-- stance
+		CheckStance(me)
 		
-        if  GetMe():GetMp() > 200
-		and not GetMe():IsBlocked(true)
+        if not me:IsBlocked(true)
 		and target
 		and not target:IsAlikeDeath()
 		and target:IsEnemy()

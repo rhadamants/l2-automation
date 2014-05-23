@@ -1,6 +1,9 @@
-dprint = function(...) ShowToClient("debug", ({...})[1]); end
-eprint = function(...) ShowToClient("ERROR", ({...})[1]); end
-iprint = function(...) ShowToClient("INFO", ({...})[1]); end
+local function toClient(level, msg, ...)
+	ShowToClient(level, string.format(msg, ...))
+end
+dprint = function(...) toClient("debug", ...); end
+eprint = function(...) toClient("ERROR", ...); end
+iprint = function(...) toClient("INFO", ...); end
 
 log = function(...)
     local resultLine = "";
