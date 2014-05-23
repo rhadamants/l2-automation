@@ -164,7 +164,7 @@ namespace BotController
       {
           UserConnectionHandle userConnectionState;
           Clients.TryRemove(userHandleId, out userConnectionState);
-          handle.WorkSocket.Disconnect(false);
+          userConnectionState.WorkSocket.Disconnect(false);
           ServerManager.ClientDisconnected(userHandleId);
       }
   }

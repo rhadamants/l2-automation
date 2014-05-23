@@ -6,6 +6,17 @@ using Newtonsoft.Json.Linq;
 
 namespace BotController.Managers
 {
+  public class PathLoc
+  {
+    public double X;
+    public double Y;
+  }
+
+  public class PathPoint
+  {
+    public PathLoc Loc;
+  }
+
   public class NavigationManager
   {
     public static Dictionary<User, int> PositionByUser = new Dictionary<User, int>();
@@ -57,6 +68,13 @@ namespace BotController.Managers
       {
         ServerManager.SendMessageToClient(user.HandleId, msg);
       }
+    }
+
+    public static readonly Dictionary<User, List<PathPoint>> UsersPath = new Dictionary<User, List<PathPoint>>();
+
+    public static void MethodSyncuserPath(JObject jObject)
+    {
+      //UserManager.CurrentUser.
     }
   }
 }
